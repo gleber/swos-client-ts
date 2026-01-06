@@ -194,3 +194,107 @@ export function toMikrotik(obj: unknown): string {
   }
   throw new Error('Unsupported type for toMikrotik')
 }
+
+// ===== Enum Converters =====
+
+import { PoeMode, PoeStatus } from '../types/link.js'
+import { VlanPortMode } from '../types/vlan.js'
+
+/**
+ * Converts SwOS numeric PoE mode value to string enum.
+ */
+export function toPoeMode(value: number): PoeMode {
+  const map: Record<number, PoeMode> = {
+    0: PoeMode.Off,
+    1: PoeMode.Auto,
+    2: PoeMode.On,
+    3: PoeMode.Calib,
+  }
+  return map[value] ?? PoeMode.Off
+}
+
+/**
+ * Converts PoE mode string enum to SwOS numeric value.
+ */
+export function fromPoeMode(mode: PoeMode): number {
+  const map: Record<PoeMode, number> = {
+    [PoeMode.Off]: 0,
+    [PoeMode.Auto]: 1,
+    [PoeMode.On]: 2,
+    [PoeMode.Calib]: 3,
+  }
+  return map[mode]
+}
+
+/**
+ * Converts SwOS numeric PoE status value to string enum.
+ */
+export function toPoeStatus(value: number): PoeStatus {
+  const map: Record<number, PoeStatus> = {
+    0: PoeStatus.Unavailable,
+    1: PoeStatus.Disabled,
+    2: PoeStatus.WaitingForLoad,
+    3: PoeStatus.Active,
+  }
+  return map[value] ?? PoeStatus.Unavailable
+}
+
+/**
+ * Converts PoE status string enum to SwOS numeric value.
+ */
+export function fromPoeStatus(status: PoeStatus): number {
+  const map: Record<PoeStatus, number> = {
+    [PoeStatus.Unavailable]: 0,
+    [PoeStatus.Disabled]: 1,
+    [PoeStatus.WaitingForLoad]: 2,
+    [PoeStatus.Active]: 3,
+  }
+  return map[status]
+}
+
+/**
+ * Converts SwOS numeric VLAN port mode value to string enum.
+ */
+export function toVlanPortMode(value: number): VlanPortMode {
+  const map: Record<number, VlanPortMode> = {
+    0: VlanPortMode.LeaveAsIs,
+    1: VlanPortMode.AlwaysStrip,
+    2: VlanPortMode.AddIfMissing,
+    3: VlanPortMode.NotAMember,
+  }
+  return map[value] ?? VlanPortMode.LeaveAsIs
+}
+
+/**
+ * Converts VLAN port mode string enum to SwOS numeric value.
+ */
+export function fromVlanPortMode(mode: VlanPortMode): number {
+  const map: Record<VlanPortMode, number> = {
+    [VlanPortMode.LeaveAsIs]: 0,
+    [VlanPortMode.AlwaysStrip]: 1,
+    [VlanPortMode.AddIfMissing]: 2,
+    [VlanPortMode.NotAMember]: 3,
+  }
+  return map[mode]
+}
+
+// ===== Branded Type Constructors =====
+
+import { Schema } from 'effect'
+import { IpAddress, MacAddress } from '../types/branded.js'
+
+/**
+ * Creates a branded IpAddress from a string.
+ * Validates the format and throws if invalid.
+ */
+export function createIpAddress(value: string): IpAddress {
+  return Schema.decodeUnknownSync(IpAddress)(value)
+}
+
+/**
+ * Creates a branded MacAddress from a string.
+ * Validates the format and throws if invalid.
+ */
+export function createMacAddress(value: string): MacAddress {
+  return Schema.decodeUnknownSync(MacAddress)(value)
+}

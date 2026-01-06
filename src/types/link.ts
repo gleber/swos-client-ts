@@ -1,15 +1,15 @@
 export enum PoeMode {
-  Off = 0,
-  Auto = 1,
-  On = 2,
-  Calib = 3,
+  Off = 'off',
+  Auto = 'auto',
+  On = 'on',
+  Calib = 'calib',
 }
 
 export enum PoeStatus {
-  Unavailable = 0,
-  Disabled = 1,
-  WaitingForLoad = 2,
-  Active = 3,
+  Unavailable = 'unavailable',
+  Disabled = 'disabled',
+  WaitingForLoad = 'waiting-for-load',
+  Active = 'active',
 }
 
 export interface Link {

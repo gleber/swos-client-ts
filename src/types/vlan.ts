@@ -1,8 +1,8 @@
 export enum VlanPortMode {
-  LeaveAsIs = 0,
-  AlwaysStrip = 1,
-  AddIfMissing = 2,
-  NotAMember = 3,
+  LeaveAsIs = 'leave-as-is',
+  AlwaysStrip = 'always-strip',
+  AddIfMissing = 'add-if-missing',
+  NotAMember = 'not-a-member',
 }
 
 export interface Vlan {

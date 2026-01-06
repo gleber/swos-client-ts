@@ -1,6 +1,7 @@
 import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SwOSClient } from '../core/swos-client.js'
+import { VlanPortMode } from '../types/vlan.js'
 import { http, HttpResponse, server } from './setup.js'
 
 describe('VlanPage', () => {
@@ -50,7 +51,14 @@ describe('VlanPage', () => {
       id: 100,
       independentVlanLookup: false,
       igmpSnooping: false,
-      portMode: [0, 0, 0, 0, 0, 0],
+      portMode: [
+        VlanPortMode.LeaveAsIs,
+        VlanPortMode.LeaveAsIs,
+        VlanPortMode.LeaveAsIs,
+        VlanPortMode.LeaveAsIs,
+        VlanPortMode.LeaveAsIs,
+        VlanPortMode.LeaveAsIs,
+      ],
     })
 
     // Check if new vlan has default props

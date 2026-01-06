@@ -1,8 +1,14 @@
 import { Effect } from 'effect'
 import { SwOSError } from '../../types/error.js'
 import type { VlanRequest } from '../../types/requests.js'
-import type { RawVlanStatus, Vlan, VlanPortMode } from '../../types/vlan.js'
-import { fixJson, parseHexInt, toMikrotik } from '../../utils/parsers.js'
+import type { RawVlanStatus, Vlan } from '../../types/vlan.js'
+import {
+  fixJson,
+  fromVlanPortMode,
+  parseHexInt,
+  toMikrotik,
+  toVlanPortMode,
+} from '../../utils/parsers.js'
 import type { Page } from '../page.interface.js'
 import type { SwOSClient } from '../swos-client.js'
 
@@ -41,7 +47,7 @@ export class VlanPage implements Page<Vlan[]> {
             id: parseHexInt(r.vid),
             independentVlanLookup: parseHexInt(r.ivl) !== 0,
             igmpSnooping: parseHexInt(r.igmp) !== 0,
-            portMode: r.prt.map((p) => parseHexInt(p) as VlanPortMode),
+            portMode: r.prt.map((p) => toVlanPortMode(parseHexInt(p))),
           }))
         }).pipe(
           Effect.mapError(
@@ -77,18 +83,7 @@ export class VlanPage implements Page<Vlan[]> {
       vid: v.id,
       ivl: v.independentVlanLookup,
       igmp: v.igmpSnooping,
-      prt: v.portMode,
+      prt: v.portMode.map((p) => fromVlanPortMode(p)),
     }))
   }
-
-  // Helpers for manipulating Vlan[] data (static or separate helper?)
-  // User requested Page classes to be stateless load/save.
-  // Helper methods that manipulated `this.vlans` are now awkward.
-  // I will make them static helpers or remove them if used only internally.
-  // They seemed to be utilities for consumers.
-  // I'll make them static or standalone functions?
-  // Or I can keep them but they must operate on passed array?
-  // "Make all page classes stateless."
-  // I'll leave them out for now to strictly follow "stateless".
-  // Consumer works with Vlan[] directly.
 }

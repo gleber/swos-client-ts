@@ -4,6 +4,8 @@ import type { SysRequest } from '../../types/requests.js'
 import type { RawSysStatus, Sys, SysPort } from '../../types/sys.js'
 import {
   boolArrayToHex,
+  createIpAddress,
+  createMacAddress,
   fixJson,
   hexToBoolArray,
   hexToMac,
@@ -61,19 +63,19 @@ export class SysPage implements Page<Sys> {
           }))
 
           return {
-            mac: hexToMac(raw.mac),
+            mac: createMacAddress(hexToMac(raw.mac)),
             serialNumber: raw.sid,
             identity: hexToString(raw.id),
             version: hexToString(raw.ver),
             boardName: hexToString(raw.brd),
-            rootBridgeMac: hexToMac(raw.rmac),
+            rootBridgeMac: createMacAddress(hexToMac(raw.rmac)),
             uptime: parseHexInt(raw.upt),
-            ip: intToIp(parseHexInt(raw.ip)),
+            ip: createIpAddress(intToIp(parseHexInt(raw.ip))),
             build: parseHexInt(raw.bld),
             dsc: parseHexInt(raw.dsc),
             wdt: parseHexInt(raw.wdt),
             independentVlanLookup: parseHexInt(raw.ivl) !== 0,
-            allowFrom: intToIp(parseHexInt(raw.alla)),
+            allowFrom: createIpAddress(intToIp(parseHexInt(raw.alla))),
             allm: parseHexInt(raw.allm),
             allowFromVlan: parseHexInt(raw.avln),
             igmpSnooping: parseHexInt(raw.igmp) !== 0,
@@ -86,7 +88,7 @@ export class SysPage implements Page<Sys> {
             portCostMode: parseHexInt(raw.cost),
             forwardReservedMulticast: raw.frmc ? parseHexInt(raw.frmc) !== 0 : false,
             addressAcquisition: parseHexInt(raw.iptp),
-            staticIpAddress: intToIp(parseHexInt(raw.sip)),
+            staticIpAddress: createIpAddress(intToIp(parseHexInt(raw.sip))),
             ports,
           }
         }).pipe(

@@ -1,6 +1,7 @@
 import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SwOSClient } from '../core/swos-client.js'
+import { createIpAddress } from '../utils/parsers.js'
 import { http, HttpResponse, server } from './setup.js'
 
 describe('SysPage', () => {
@@ -149,7 +150,7 @@ describe('SysPage', () => {
 
     // Modify
     sys.identity = 'test'
-    sys.staticIpAddress = '192.168.1.5'
+    sys.staticIpAddress = createIpAddress('192.168.1.5')
 
     await Effect.runPromise(client.sys.save(sys))
   })

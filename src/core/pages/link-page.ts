@@ -1,15 +1,19 @@
 import { Effect } from 'effect'
 import { SwOSError } from '../../types/error.js'
-import type { Link, PoeMode, PoeStatus, RawLinkStatus } from '../../types/link.js'
+import type { Link, RawLinkStatus } from '../../types/link.js'
 import type { LinkRequest } from '../../types/requests.js'
 import {
   boolArrayToHex,
   fixJson,
+  fromPoeMode,
+  fromPoeStatus,
   hexToBoolArray,
   hexToString,
   parseHexInt,
   stringToHex,
   toMikrotik,
+  toPoeMode,
+  toPoeStatus,
 } from '../../utils/parsers.js'
 import type { Page } from '../page.interface.js'
 import type { SwOSClient } from '../swos-client.js'
@@ -57,9 +61,9 @@ export class LinkPage implements Page<Link[]> {
             duplexControl: dpxc[i],
             flowControl: fct[i],
             autoNegotiation: an[i],
-            poeMode: raw.poe ? (parseHexInt(raw.poe[i]) as PoeMode) : 0,
+            poeMode: raw.poe ? toPoeMode(parseHexInt(raw.poe[i])) : toPoeMode(0),
             poePrio: raw.prio ? parseHexInt(raw.prio[i]) : 0,
-            poeStatus: raw.poes ? (parseHexInt(raw.poes[i]) as PoeStatus) : 0,
+            poeStatus: raw.poes ? toPoeStatus(parseHexInt(raw.poes[i])) : toPoeStatus(0),
             speedControl: raw.spdc ? parseHexInt(raw.spdc[i]) : 0,
             power: raw.pwr ? parseHexInt(raw.pwr[i]) : 0,
             current: raw.curr ? parseHexInt(raw.curr[i]) : 0,
@@ -100,7 +104,7 @@ export class LinkPage implements Page<Link[]> {
     const spdc = links.map((link) => link.speedControl)
     const dpxc = links.map((link) => link.duplexControl)
     const fct = links.map((link) => link.flowControl)
-    const poe = links.map((link) => link.poeMode)
+    const poe = links.map((link) => fromPoeMode(link.poeMode))
     const prio = links.map((link) => link.poePrio)
 
     return {

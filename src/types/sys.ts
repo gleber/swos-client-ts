@@ -1,3 +1,5 @@
+import type { IpAddress, MacAddress } from './branded.js'
+
 export interface SysPort {
   mikrotikDiscoveryProtocol: boolean
   allowFrom: boolean
@@ -5,19 +7,19 @@ export interface SysPort {
 }
 
 export interface Sys {
-  mac: string
+  mac: MacAddress
   serialNumber: string
   identity: string
   version: string
   boardName: string
-  rootBridgeMac: string
+  rootBridgeMac: MacAddress
   uptime: number
-  ip: string
+  ip: IpAddress
   build: number
   dsc: number
   wdt: number
   independentVlanLookup: boolean
-  allowFrom: string
+  allowFrom: IpAddress
   allm: number
   allowFromVlan: number
   igmpSnooping: boolean
@@ -30,7 +32,7 @@ export interface Sys {
   portCostMode: number
   forwardReservedMulticast: boolean
   addressAcquisition: number
-  staticIpAddress: string
+  staticIpAddress: IpAddress
   ports: SysPort[]
 }
 
