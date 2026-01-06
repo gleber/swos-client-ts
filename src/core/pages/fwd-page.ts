@@ -14,6 +14,14 @@ export class FwdPage {
     this.client = client
   }
 
+  /**
+   * Loads forwarding configuration.
+   * NOTE: The mapping of VLAN properties here is historically complex and potentially confusing
+   * regarding SwOS vs TS field names (vlan vs dvid vs defaultVlanId).
+   * - `raw.vlan` maps to `defaultVlanId` (in TS model)
+   * - `raw.dvid` maps to `vlanId`
+   * - `raw.vlni` maps to `vlanMode`
+   */
   async load(): Promise<Either<Fwd, SwOSError>> {
     return (await this.client.fetch('/fwd.b')).flatMap((response) => {
       try {

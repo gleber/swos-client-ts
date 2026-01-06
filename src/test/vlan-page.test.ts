@@ -43,19 +43,27 @@ describe('VlanPage', () => {
     )
 
     client.vlan.setNumPorts(6)
-    await client.vlan.load()
+    client.vlan.setNumPorts(6)
+    const result = await client.vlan.load()
+    expect(result.isResult()).toBe(true)
+    const vlans = result.getResult()
 
     // Add VLAN 100
-    const addResult = client.vlan.addVlan(100)
-    expect(addResult.isResult()).toBe(true)
+    // Manually push to array as helpers were removed
+    vlans.push({
+      id: 100,
+      independentVlanLookup: false,
+      igmpSnooping: false,
+      portMode: [0, 0, 0, 0, 0, 0],
+    })
 
     // Check if new vlan has default props
-    const vlan100 = client.vlan.getVlan(100)
+    const vlan100 = vlans.find(v => v.id === 100)
     expect(vlan100).toBeDefined()
     expect(vlan100?.portMode.length).toBe(6)
 
     // Save
-    const result = await client.vlan.save()
-    expect(result.isResult()).toBe(true)
+    const saveResult = await client.vlan.save(vlans)
+    expect(saveResult.isResult()).toBe(true)
   })
 })

@@ -72,6 +72,7 @@ describe('LinkPage', () => {
 
     // Initial Load
     const loadResult = await client.links.load()
+    expect(loadResult.isResult()).toBe(true)
     const links = loadResult.getResult()
 
     // Modify
@@ -80,7 +81,7 @@ describe('LinkPage', () => {
     }
 
     // Save
-    const result = await client.links.save()
+    const result = await client.links.save(links)
     expect(result.isResult()).toBe(true)
   })
 
@@ -102,14 +103,15 @@ describe('LinkPage', () => {
 
     const client = new SwOSClient('192.168.88.1', 'admin', '')
     // Load initial state
-    await client.links.load()
+    const loadResult = await client.links.load()
+    const links = loadResult.getResult()
 
     // Modify a link
-    if (client.links.links[0]) {
-      client.links.links[0].enabled = true;
+    if (links[0]) {
+      links[0].enabled = true;
     }
 
-    const result = await client.links.save()
+    const result = await client.links.save(links)
 
 
     expect(result.isResult()).toBe(true)

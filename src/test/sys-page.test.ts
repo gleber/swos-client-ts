@@ -146,15 +146,15 @@ describe('SysPage', () => {
     client.sys.setNumPorts(6)
 
     // Load first
-    await client.sys.load()
+    const loadResult = await client.sys.load()
+    expect(loadResult.isResult()).toBe(true)
+    const sys = loadResult.getResult()
 
     // Modify
-    if (client.sys.sys) {
-      client.sys.sys.identity = 'test';
-      client.sys.sys.staticIpAddress = '192.168.1.5';
-    }
+    sys.identity = 'test'
+    sys.staticIpAddress = '192.168.1.5'
 
-    const result = await client.sys.save()
+    const result = await client.sys.save(sys)
     expect(result.isResult()).toBe(true)
   })
 })

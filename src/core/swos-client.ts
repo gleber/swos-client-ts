@@ -7,6 +7,7 @@ import type { Rstp } from '../types/rstp.js'
 import type { SfpStatus } from '../types/sfp.js'
 import type { Sys } from '../types/sys.js'
 import type { Vlan } from '../types/vlan.js'
+import type { Page } from './page.interface.js'
 import { FwdPage } from './pages/fwd-page.js'
 import { LinkPage } from './pages/link-page.js'
 import { RstpPage } from './pages/rstp-page.js'
@@ -23,6 +24,10 @@ export interface SwOSData {
   rstp?: Rstp
 }
 
+/**
+ * Main client for interacting with a SwOS device.
+ * Manages authentication and provides access to individual pages.
+ */
 export class SwOSClient {
   private client: DigestFetch
   private baseUrl: string
@@ -78,7 +83,22 @@ export class SwOSClient {
     }
   }
 
+  /**
+   * Aggregates data from all supported pages into a single state object.
+   * - Loads 'System' and 'Links' first to determine port count.
+   * - fetches other pages (SFP, VLAN, FWD, RSTP) in parallel.
+   * - gracefully handles failures in optional pages by returning undefined.
+   */
   async fetchAll(): Promise<Either<SwOSData, SwOSError>> {
+    const loadOptional = async <T>(page: Page<T>): Promise<T | undefined> => {
+      const result = await page.load()
+      if (result.isError()) {
+        console.error(result.getError().message)
+        return undefined
+      }
+      return result.getResult()
+    }
+
     const linksResult = await this.links.load()
     if (linksResult.isError()) {
       return Either.error(linksResult.getError())
@@ -95,21 +115,12 @@ export class SwOSClient {
     }
     const sys = sysResult.getResult()
 
-    const sfpResult = await this.sfp.load()
-    const sfp = sfpResult.isResult() ? sfpResult.getResult() : undefined
-    if (sfpResult.isError()) console.error(sfpResult.getError().message)
-
-    const vlanResult = await this.vlan.load()
-    const vlan = vlanResult.isResult() ? vlanResult.getResult() : undefined
-    if (vlanResult.isError()) console.error(vlanResult.getError().message)
-
-    const fwdResult = await this.fwd.load()
-    const fwd = fwdResult.isResult() ? fwdResult.getResult() : undefined
-    if (fwdResult.isError()) console.error(fwdResult.getError().message)
-
-    const rstpResult = await this.rstp.load()
-    const rstp = rstpResult.isResult() ? rstpResult.getResult() : undefined
-    if (rstpResult.isError()) console.error(rstpResult.getError().message)
+    const [sfp, vlan, fwd, rstp] = await Promise.all([
+      loadOptional(this.sfp),
+      loadOptional(this.vlan),
+      loadOptional(this.fwd),
+      loadOptional(this.rstp),
+    ])
 
     return Either.result({
       links,
@@ -121,14 +132,32 @@ export class SwOSClient {
     })
   }
 
-  async save(): Promise<Either<void, SwOSError>> {
-    const pages = [this.links, this.sys, this.vlan, this.fwd, this.rstp];
-    for (const page of pages) {
-      const result = await page.save();
-      if (result.isError()) {
-        return Either.error(result.getError());
-      }
+  /**
+   * Saves the provided data back to the device.
+   * Iterates through all pages and delegates saving to them if data is present.
+   * Fails fast if any page save returns an error.
+   *
+   * @param data - The full SwOSData object containing updates
+   */
+  async save(data: SwOSData): Promise<Either<void, SwOSError>> {
+    const savePage = async <T>(page: Page<T>, pageData?: T): Promise<Either<void, SwOSError>> => {
+      if (!pageData) return Either.result(undefined);
+      return page.save(pageData);
     }
-    return Either.result(undefined);
+
+    const results = await Promise.all([
+      savePage(this.links, data.links),
+      savePage(this.sys, data.sys),
+      savePage(this.vlan, data.vlan),
+      savePage(this.fwd, data.fwd),
+      savePage(this.rstp, data.rstp),
+      // sfp is read only
+    ]);
+
+    for (const result of results) {
+      if (result.isError()) return result;
+    }
+
+    return Either.result(undefined)
   }
 }

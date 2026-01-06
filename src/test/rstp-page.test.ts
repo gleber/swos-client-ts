@@ -54,13 +54,13 @@ describe('RstpPage', () => {
     // But RstpPage.load sets numPorts from role.length.
     // So calling load is enough.
 
-    await client.rstp.load()
+    const loadResult = await client.rstp.load()
+    expect(loadResult.isResult()).toBe(true)
+    const rstp = loadResult.getResult()
 
-    if (client.rstp.rstp) {
-      client.rstp.rstp.enabled = true
-    }
+    rstp.enabled = true
 
-    const result = await client.rstp.save()
+    const result = await client.rstp.save(rstp)
     expect(result.isResult()).toBe(true)
   })
 })

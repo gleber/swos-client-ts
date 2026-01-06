@@ -126,13 +126,14 @@ describe('FwdPage', () => {
       })
     )
 
-    await client.fwd.load()
-    if (client.fwd.fwd) {
-      // Toggle locked on first port
-      client.fwd.fwd.ports[0].locked = true;
-    }
+    const loadResult = await client.fwd.load()
+    if (loadResult.isError()) throw loadResult.getError()
+    const fwd = loadResult.getResult()
 
-    const result = await client.fwd.save()
+    // Toggle locked on first port
+    fwd.ports[0].locked = true
+
+    const result = await client.fwd.save(fwd)
     expect(result.isResult()).toBe(true)
   })
 })

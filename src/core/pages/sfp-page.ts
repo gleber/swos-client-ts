@@ -2,15 +2,24 @@ import { Either } from '../../types/either.js'
 import { SwOSError } from '../../types/error.js'
 import type { RawSfpStatus, SfpStatus } from '../../types/sfp.js'
 import { fixJson, hexToString, parseHexInt } from '../../utils/parsers.js'
+import type { Page } from '../page.interface.js'
 import type { SwOSClient } from '../swos-client.js'
 
-export class SfpPage {
-  private client: SwOSClient
+/**
+ * Handles the 'SFP' tab of SwOS.
+ * Endpoint: /sfp.b
+ * This page is Read-Only.
+ */
+export class SfpPage implements Page<SfpStatus[]> {
+  constructor(private client: SwOSClient) { }
 
-  constructor(client: SwOSClient) {
-    this.client = client
-  }
-
+  /**
+   * Loads SFP status.
+   * Handles a quirk where SwOS returns a single object if one SFP is present (or none?),
+   * and an array of arrays/objects if multiple are present.
+   * Actually, SwOS returns keys with values that can be single value or array of values.
+   * e.g. { vnd: "Mikrotik", ... } vs { vnd: ["Mikrotik", "Mikrotik"], ... }
+   */
   async load(): Promise<Either<SfpStatus[], SwOSError>> {
     return (await this.client.fetch('/sfp.b')).flatMap((response) => {
       try {
@@ -60,5 +69,10 @@ export class SfpPage {
         )
       }
     })
+  }
+
+  async save(data: SfpStatus[]): Promise<Either<void, SwOSError>> {
+    // SFP page is read-only
+    return Either.error(new SwOSError('SFP page is read-only'))
   }
 }
