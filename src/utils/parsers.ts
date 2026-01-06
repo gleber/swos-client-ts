@@ -1,97 +1,99 @@
-export function fixJson(json: string): string {
+export function fixJson(input: string): string {
   // Replace quotes
-  json = json.replace(/[`']/g, '"');
+  let json = input.replace(/[`']/g, '"')
   // Remove spaces after :
-  json = json.replace(/:\s+/g, ':');
+  json = json.replace(/:\s+/g, ':')
   // Replace unquoted keys with quoted
-  json = json.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+  json = json.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
   // Quote hex values
-  json = json.replace(/:(\s*)(0x[0-9a-fA-F]+)/g, ':$1"$2"');
-  json = json.replace(/(0x[0-9a-fA-F]+)(?=[,\]\}])/g, '"$1"');
+  json = json.replace(/:(\s*)(0x[0-9a-fA-F]+)/g, ':$1"$2"')
+  json = json.replace(/(0x[0-9a-fA-F]+)(?=[,\]\}])/g, '"$1"')
   // Quote other unquoted values
-  json = json.replace(/:(\s*)([^",\[\]{}\s]*)(?=[,\]\}])/g, ':$1"$2"');
+  json = json.replace(/:(\s*)([^",\[\]{}\s]*)(?=[,\]\}])/g, ':$1"$2"')
   // Replace single quotes with double quotes
-  json = json.replace(/'/g, '"');
-  return json;
+  json = json.replace(/'/g, '"')
+  return json
 }
 
 export function hexToBoolArray(hex: string, length: number): boolean[] {
-  const num = parseInt(hex, 16);
-  const arr = [];
+  const num = Number.parseInt(hex, 16)
+  const arr = []
   for (let i = 0; i < length; i++) {
-    arr.push((num & (1 << i)) !== 0);
+    arr.push((num & (1 << i)) !== 0)
   }
-  return arr;
+  return arr
 }
 
 export function boolArrayToHex(arr: boolean[]): string {
-  let num = 0;
+  let num = 0
   for (let i = 0; i < arr.length; i++) {
     if (arr[i]) {
-      num |= 1 << i;
+      num |= 1 << i
     }
   }
-  return '0x' + num.toString(16).toUpperCase();
+  return `0x${num.toString(16).toUpperCase()}`
 }
 
 export function hexToString(hex: string): string {
-  if (!hex || hex === '') return '';
-  const bytes = hex.match(/.{1,2}/g)?.map(b => parseInt(b, 16)) || [];
-  return Buffer.from(bytes).toString('utf8');
+  if (!hex || hex === '') return ''
+  const bytes = hex.match(/.{1,2}/g)?.map((b) => Number.parseInt(b, 16)) || []
+  return Buffer.from(bytes).toString('utf8')
 }
 
 export function stringToHex(str: string): string {
   return Array.from(str)
-    .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
-    .join('');
+    .map((c) => c.charCodeAt(0).toString(16).padStart(2, '0'))
+    .join('')
 }
 
 export function parseHexInt(hex: string): number {
-  return parseInt(hex, 16);
+  return Number.parseInt(hex, 16)
 }
 
 export function intToHex(num: number): string {
-  return '0x' + num.toString(16).toUpperCase();
+  return `0x${num.toString(16).toUpperCase()}`
 }
 
 export function intToIp(num: number): string {
   // Device sends IPs in little-endian byte order
-  const b1 = num & 255;
-  const b2 = (num >>> 8) & 255;
-  const b3 = (num >>> 16) & 255;
-  const b4 = (num >>> 24) & 255;
-  return [b1, b2, b3, b4].join('.');
+  const b1 = num & 255
+  const b2 = (num >>> 8) & 255
+  const b3 = (num >>> 16) & 255
+  const b4 = (num >>> 24) & 255
+  return [b1, b2, b3, b4].join('.')
 }
 
 export function ipToInt(ip: string): number {
-  const parts = ip.split('.').map(Number);
-  return (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3];
+  const parts = ip.split('.').map(Number)
+  return (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]
 }
 
 export function hexToMac(hex: string): string {
-  return hex.match(/.{1,2}/g)?.join(':') || '';
+  return hex.match(/.{1,2}/g)?.join(':') || ''
 }
 
 export function macToHex(mac: string): string {
-  return mac.replace(/:/g, '');
+  return mac.replace(/:/g, '')
 }
 
-export function toMikrotik(obj: any): string {
+export function toMikrotik(obj: unknown): string {
   if (Array.isArray(obj)) {
-    return '[' + obj.map(toMikrotik).join(',') + ']';
+    return `[${obj.map(toMikrotik).join(',')}]`
   }
   if (typeof obj === 'object' && obj !== null) {
-    const entries = Object.entries(obj).map(([key, value]) => `${key}:${toMikrotik(value)}`);
-    return '{' + entries.join(',') + '}';
+    const entries = Object.entries(obj as Record<string, unknown>).map(
+      ([key, value]) => `${key}:${toMikrotik(value)}`
+    )
+    return `{${entries.join(',')}}`
   }
   if (typeof obj === 'number') {
-    return '0x' + obj.toString(16).toUpperCase();
+    return `0x${obj.toString(16).toUpperCase()}`
   }
   if (typeof obj === 'boolean') {
-    return obj ? '0x01' : '0x00';
+    return obj ? '0x01' : '0x00'
   }
   if (typeof obj === 'string') {
-    return `'${obj}'`;
+    return `'${obj}'`
   }
-  throw new Error('Unsupported type for toMikrotik');
+  throw new Error('Unsupported type for toMikrotik')
 }

@@ -1,33 +1,33 @@
-import { SwOSClient } from '../swos-client.js';
-import { Either } from '../../types/either.js';
-import { SwOSError } from '../../types/error.js';
-import { RawSfpStatus, SfpStatus } from '../../types/sfp.js';
-import { fixJson, hexToString, parseHexInt } from '../../utils/parsers.js';
+import { Either } from '../../types/either.js'
+import { SwOSError } from '../../types/error.js'
+import type { RawSfpStatus, SfpStatus } from '../../types/sfp.js'
+import { fixJson, hexToString, parseHexInt } from '../../utils/parsers.js'
+import type { SwOSClient } from '../swos-client.js'
 
 export class SfpPage {
-  private client: SwOSClient;
+  private client: SwOSClient
 
   constructor(client: SwOSClient) {
-    this.client = client;
+    this.client = client
   }
 
   async load(): Promise<Either<SfpStatus[], SwOSError>> {
-    return (await this.client.fetch('/sfp.b')).flatMap(response => {
+    return (await this.client.fetch('/sfp.b')).flatMap((response) => {
       try {
-        const fixed = fixJson(response);
-        const raw: RawSfpStatus = JSON.parse(fixed);
+        const fixed = fixJson(response)
+        const raw: RawSfpStatus = JSON.parse(fixed)
 
-        const sfps: SfpStatus[] = [];
+        const sfps: SfpStatus[] = []
         if (Array.isArray(raw.vnd)) {
           // Array response
-          const count = raw.vnd.length;
-          const vendors = raw.vnd as string[];
-          const partNumbers = raw.pnr as string[];
-          const serialNumbers = raw.ser as string[];
-          const temperatures = raw.tmp as string[];
-          const txPowers = raw.tpw as string[];
-          const rxPowers = raw.rpw as string[];
-          const voltages = raw.vcc as string[];
+          const count = raw.vnd.length
+          const vendors = raw.vnd as string[]
+          const partNumbers = raw.pnr as string[]
+          const serialNumbers = raw.ser as string[]
+          const temperatures = raw.tmp as string[]
+          const txPowers = raw.tpw as string[]
+          const rxPowers = raw.rpw as string[]
+          const voltages = raw.vcc as string[]
 
           for (let i = 0; i < count; i++) {
             sfps.push({
@@ -38,7 +38,7 @@ export class SfpPage {
               txPower: parseHexInt(txPowers[i]),
               rxPower: parseHexInt(rxPowers[i]),
               voltage: parseHexInt(voltages[i]),
-            });
+            })
           }
         } else {
           // Single response
@@ -50,13 +50,15 @@ export class SfpPage {
             txPower: parseHexInt(raw.tpw as string),
             rxPower: parseHexInt(raw.rpw as string),
             voltage: parseHexInt(raw.vcc as string),
-          });
+          })
         }
 
-        return Either.result(sfps);
+        return Either.result(sfps)
       } catch (e) {
-        return Either.error(new SwOSError(`SFP load failed: ${(e as Error).message}\nResponse: ${response || 'N/A'}`));
+        return Either.error(
+          new SwOSError(`SFP load failed: ${(e as Error).message}\nResponse: ${response || 'N/A'}`)
+        )
       }
-    });
+    })
   }
 }

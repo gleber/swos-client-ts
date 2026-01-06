@@ -23,12 +23,15 @@
       "quoteStyle": "single",
       "jsxQuoteStyle": "double",
       "quoteProperties": "asNeeded",
-      "trailingComma": "es5",
+      "trailingCommas": "es5",
       "semicolons": "asNeeded",
       "arrowParentheses": "always",
       "bracketSpacing": true,
       "bracketSameLine": false,
       "attributePosition": "auto"
     }
+  },
+  "files": {
+    "ignore": ["dist/**", "coverage/**"]
   }
 }

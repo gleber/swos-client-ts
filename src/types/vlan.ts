@@ -6,15 +6,15 @@ export enum VlanPortMode {
 }
 
 export interface Vlan {
-  id: number;
-  independentVlanLookup: boolean;
-  igmpSnooping: boolean;
-  portMode: VlanPortMode[];
+  id: number
+  independentVlanLookup: boolean
+  igmpSnooping: boolean
+  portMode: VlanPortMode[]
 }
 
 export interface RawVlanStatus {
-  vid: string;
-  ivl: string;
-  igmp: string;
-  prt: string[];
+  vid: string
+  ivl: string
+  igmp: string
+  prt: string[]
 }

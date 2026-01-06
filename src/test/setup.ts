@@ -1,17 +1,21 @@
-import { beforeAll, afterEach, afterAll } from 'vitest';
-import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
-import { fetch, Headers, Request, Response } from 'undici';
+import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node'
+import { Headers, Request, Response, fetch } from 'undici'
+import { afterAll, afterEach, beforeAll } from 'vitest'
 
-global.fetch = fetch as any;
-global.Headers = Headers as any;
-global.Request = Request as any;
-global.Response = Response as any;
+// biome-ignore lint/suspicious/noExplicitAny: mock
+global.fetch = fetch as any
+// biome-ignore lint/suspicious/noExplicitAny: mock
+global.Headers = Headers as any
+// biome-ignore lint/suspicious/noExplicitAny: mock
+global.Request = Request as any
+// biome-ignore lint/suspicious/noExplicitAny: mock
+global.Response = Response as any
 
-const server = setupServer();
+const server = setupServer()
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
 
-export { server, http, HttpResponse };
+export { server, http, HttpResponse }
