@@ -51,8 +51,9 @@ describe('SysPage', () => {
 
     const result = await client.sys.load();
     expect(result.isResult()).toBe(true);
+    const sys = result.getResult();
 
-    expect(client.sys.sys).toMatchObject({
+    expect(sys).toMatchObject({
       mac: '08:55:31:00:1b:19',
       serialNumber: '443533443044423631453543',
       identity: 'office-router',

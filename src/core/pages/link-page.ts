@@ -6,13 +6,12 @@ import { fixJson, hexToBoolArray, hexToString, parseHexInt, toMikrotik } from '.
 
 export class LinkPage {
   private client: SwOSClient;
-  public links: Link[] = [];
 
   constructor(client: SwOSClient) {
     this.client = client;
   }
 
-  async load(): Promise<Either<void, SwOSError>> {
+  async load(): Promise<Either<Link[], SwOSError>> {
     return (await this.client.fetch('/link.b')).flatMap(response => {
       try {
         const fixed = fixJson(response);
@@ -25,17 +24,17 @@ export class LinkPage {
         const dpxc = hexToBoolArray(raw.dpxc, numPorts);
         const fct = hexToBoolArray(raw.fct, numPorts);
 
-        this.links = [];
+        const links: Link[] = [];
         for (let i = 0; i < numPorts; i++) {
           const name = hexToString(raw.nm[i]);
-          const poeMode = parseHexInt(raw.poe[i]) as PoeMode;
-          const poePrio = parseHexInt(raw.prio[i]);
-          const poeStatus = parseHexInt(raw.poes[i]) as PoeStatus;
-          const speedControl = parseHexInt(raw.spdc[i]);
-          const power = parseHexInt(raw.pwr[i]);
-          const current = parseHexInt(raw.curr[i]);
+          const poeMode = raw.poe ? parseHexInt(raw.poe[i]) as PoeMode : 0;
+          const poePrio = raw.prio ? parseHexInt(raw.prio[i]) : 0;
+          const poeStatus = raw.poes ? parseHexInt(raw.poes[i]) as PoeStatus : 0;
+          const speedControl = raw.spdc ? parseHexInt(raw.spdc[i]) : 0;
+          const power = raw.pwr ? parseHexInt(raw.pwr[i]) : 0;
+          const current = raw.curr ? parseHexInt(raw.curr[i]) : 0;
 
-          this.links.push({
+          links.push({
             name,
             enabled: en[i],
             linkUp: lnk[i],
@@ -51,15 +50,15 @@ export class LinkPage {
             current,
           });
         }
-        return Either.result(undefined);
+        return Either.result(links);
       } catch (e) {
         return Either.error(new SwOSError(`Link load failed: ${(e as Error).message}\nResponse: ${response || 'N/A'}`));
       }
     });
   }
 
-  async save(): Promise<Either<void, SwOSError>> {
-    const change = this.store();
+  async save(links: Link[]): Promise<Either<Link[], SwOSError>> {
+    const change = this.store(links);
     const postResult = await this.client.post('/link.b', toMikrotik(change));
     return postResult.fold(
       () => this.load(),
@@ -67,15 +66,15 @@ export class LinkPage {
     );
   }
 
-  private store(): LinkConfig {
-    const names = this.links.map(link => link.name);
-    const en = this.links.map(link => link.enabled);
-    const an = this.links.map(link => link.autoNegotiation);
-    const spdc = this.links.map(link => link.speedControl);
-    const dpxc = this.links.map(link => link.duplexControl);
-    const fct = this.links.map(link => link.flowControl);
-    const poe = this.links.map(link => link.poeMode);
-    const prio = this.links.map(link => link.poePrio);
+  private store(links: Link[]): LinkConfig {
+    const names = links.map(link => link.name);
+    const en = links.map(link => link.enabled);
+    const an = links.map(link => link.autoNegotiation);
+    const spdc = links.map(link => link.speedControl);
+    const dpxc = links.map(link => link.duplexControl);
+    const fct = links.map(link => link.flowControl);
+    const poe = links.map(link => link.poeMode);
+    const prio = links.map(link => link.poePrio);
 
     return {
       nm: names,

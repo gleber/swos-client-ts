@@ -9,16 +9,16 @@ export interface SfpStatus {
 }
 
 export interface RawSfpStatus {
-  vnd: string;
-  pnr: string;
-  rev: string;
-  ser: string;
-  dat: string;
-  typ: string;
-  wln: string;
-  tmp: string;
-  vcc: string;
-  tbs: string;
-  tpw: string;
-  rpw: string;
+  vnd: string | string[];
+  pnr: string | string[];
+  rev: string | string[];
+  ser: string | string[];
+  dat: string | string[];
+  typ: string | string[];
+  wln: string | string[];
+  tmp: string | string[];
+  vcc: string | string[];
+  tbs: string | string[];
+  tpw: string | string[];
+  rpw: string | string[];
 }

@@ -17,18 +17,18 @@ export class VlanPage {
     this.numPorts = num;
   }
 
-  async load(): Promise<Either<void, SwOSError>> {
+  async load(): Promise<Either<Vlan[], SwOSError>> {
     return (await this.client.fetch('/vlan.b')).flatMap(response => {
       try {
         const fixed = fixJson(response);
         const raw: RawVlanStatus[] = JSON.parse(fixed);
-        this.vlans = raw.map(r => ({
+        const vlans = raw.map(r => ({
           id: parseHexInt(r.vid),
           independentVlanLookup: parseHexInt(r.ivl) !== 0,
           igmpSnooping: parseHexInt(r.igmp) !== 0,
           portMode: r.prt.map(p => parseHexInt(p) as VlanPortMode),
         }));
-        return Either.result(undefined);
+        return Either.result(vlans);
       } catch (e) {
         return Either.error(new SwOSError(`VLAN load failed: ${(e as Error).message}\nResponse: ${response || 'N/A'}`));
       }

@@ -7,6 +7,21 @@ import { SysPage } from './pages/sys-page.js';
 import { VlanPage } from './pages/vlan-page.js';
 import { FwdPage } from './pages/fwd-page.js';
 import { RstpPage } from './pages/rstp-page.js';
+import { Link } from '../types/link.js';
+import { SfpStatus } from '../types/sfp.js';
+import { Sys } from '../types/sys.js';
+import { Vlan } from '../types/vlan.js';
+import { Fwd } from '../types/fwd.js';
+import { Rstp } from '../types/rstp.js';
+
+export interface SwOSData {
+  links: Link[];
+  sys: Sys;
+  sfp?: SfpStatus[];
+  vlan?: Vlan[];
+  fwd?: Fwd;
+  rstp?: Rstp;
+}
 
 export class SwOSClient {
   private client: DigestFetch;
@@ -63,33 +78,46 @@ export class SwOSClient {
     }
   }
 
-  async fetchAll(): Promise<Either<void, SwOSError>> {
-    return (await this.links.load()).fold<Promise<Either<void, SwOSError>>>(
-      async () => {
-        const numPorts = this.links.links.length;
-        this.sys.setNumPorts(numPorts);
-        this.vlan.setNumPorts(numPorts);
+  async fetchAll(): Promise<Either<SwOSData, SwOSError>> {
+    const linksResult = await this.links.load();
+    if (linksResult.isError()) {
+      return Either.error(linksResult.getError());
+    }
+    const links = linksResult.getResult();
 
-        const sfpResult = await this.sfp.load();
-        sfpResult.fold(() => { }, err => console.error(err.message));
+    const numPorts = links.length;
+    this.sys.setNumPorts(numPorts);
+    this.vlan.setNumPorts(numPorts);
 
-        return (await this.sys.load()).fold<Promise<Either<void, SwOSError>>>(
-          async () => {
-            const vlanResult = await this.vlan.load();
-            vlanResult.fold(() => { }, err => console.error(err.message));
+    const sysResult = await this.sys.load();
+    if (sysResult.isError()) {
+      return Either.error(sysResult.getError());
+    }
+    const sys = sysResult.getResult();
 
-            const fwdResult = await this.fwd.load();
-            fwdResult.fold(() => { }, err => console.error(err.message));
+    const sfpResult = await this.sfp.load();
+    const sfp = sfpResult.isResult() ? sfpResult.getResult() : undefined;
+    if (sfpResult.isError()) console.error(sfpResult.getError().message);
 
-            const rstpResult = await this.rstp.load();
-            rstpResult.fold(() => { }, err => console.error(err.message));
+    const vlanResult = await this.vlan.load();
+    const vlan = vlanResult.isResult() ? vlanResult.getResult() : undefined;
+    if (vlanResult.isError()) console.error(vlanResult.getError().message);
 
-            return Either.result(undefined);
-          },
-          err => Promise.resolve(Either.error(err))
-        );
-      },
-      err => Promise.resolve(Either.error(err))
-    );
+    const fwdResult = await this.fwd.load();
+    const fwd = fwdResult.isResult() ? fwdResult.getResult() : undefined;
+    if (fwdResult.isError()) console.error(fwdResult.getError().message);
+
+    const rstpResult = await this.rstp.load();
+    const rstp = rstpResult.isResult() ? rstpResult.getResult() : undefined;
+    if (rstpResult.isError()) console.error(rstpResult.getError().message);
+
+    return Either.result({
+      links,
+      sys,
+      sfp,
+      vlan,
+      fwd,
+      rstp,
+    });
   }
 }

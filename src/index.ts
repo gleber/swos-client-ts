@@ -12,23 +12,23 @@ program
 program
   .command('status')
   .argument('<ip>', 'Switch IP address')
-  .option('-u, --user <name>', 'Username', process.env.SWOS_USER || 'admin')
-  .option('-p, --pass <password>', 'Password', process.env.SWOS_PASS)
+  .option('-u, --user <name>', 'Username')
+  .option('-p, --pass <password>', 'Password')
   .action(async (ip, options) => {
-    const client = new SwOSClient(ip, options.user, options.pass);
+    const sanitizedIp = ip.replace(/\./g, '_');
+    const envUser = process.env[`SWOS_USER_${sanitizedIp}`] || process.env.SWOS_USER || 'admin';
+    const envPass = process.env[`SWOS_PASS_${sanitizedIp}`] || process.env.SWOS_PASS;
+
+    const user = options.user || envUser;
+    const pass = options.pass || envPass;
+
+    const client = new SwOSClient(ip, user, pass);
     const result = await client.fetchAll();
     if (result.isError()) {
       console.error('Error:', result.getError().message);
       process.exit(1);
     }
-    const data = {
-      links: client.links.links,
-      sfp: client.sfp.sfp,
-      sys: client.sys.sys,
-      vlan: client.vlan.vlans,
-      fwd: client.fwd.fwd,
-      rstp: client.rstp.rstp,
-    };
+    const data = result.getResult();
     console.log(JSON.stringify(data, null, 2));
   });
 

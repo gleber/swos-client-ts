@@ -20,8 +20,9 @@ describe('FwdPage', () => {
 
     const result = await client.fwd.load();
     expect(result.isResult()).toBe(true);
+    const fwd = result.getResult();
 
-    expect(client.fwd.fwd).toMatchObject({
+    expect(fwd).toMatchObject({
       enabled: [true, true, true, true, true, true],
       linkUp: [false, false, false, false, false, false],
       flowControl: [false, false, false, false, false, false],

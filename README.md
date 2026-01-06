@@ -1,10 +1,10 @@
 # SwOS CLI
 
-Note: This is a quick and dirty reimplementation of https://github.com/finomen/swos-client using AI. Code has not been thoroughly reviewed.
+Note: This is a reimplementation of https://github.com/finomen/swos-client using AI. Code has been verified against SwOS 2.13 running on CSS106-5G-1S and CSS326-24G-2S+, but has not been thoroughly reviewed.
 
 A TypeScript CLI tool to interact with Mikrotik managed switches running SwOS. This tool allows reading switch configurations programmatically, outputting data in JSON format.
 
-There is no official documentation for the SwOS API, so compatibility may vary across versions or hardware. Tested with CSS106-1G-4P-1S running SwOS 2.18.
+There is no official documentation for the SwOS API, so compatibility may vary across versions or hardware.
 
 ## Installation
 
@@ -42,9 +42,16 @@ Create a `.env` file in the project root with your credentials:
 ```env
 SWOS_USER=admin
 SWOS_PASS=yourpassword
+# Or specific host credentials (replace dots with underscores):
+SWOS_USER_192_168_1_10=otheruser
+SWOS_PASS_192_168_1_10=otherpass
 ```
 
-Alternatively, set environment variables directly.
+Alternatively, set environment variables directly. The tool looks for:
+1. Command line arguments
+2. Host-specific variables (`SWOS_USER_<IP>`, `SWOS_PASS_<IP>`)
+3. Global variables (`SWOS_USER`, `SWOS_PASS`)
+4. Defaults (User: 'admin')
 
 ### Status Command
 

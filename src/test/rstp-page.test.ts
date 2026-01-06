@@ -20,8 +20,9 @@ describe('RstpPage', () => {
 
     const result = await client.rstp.load();
     expect(result.isResult()).toBe(true);
+    const rstp = result.getResult();
 
-    expect(client.rstp.rstp).toMatchObject({
+    expect(rstp).toMatchObject({
       enabled: true,
       role: [3, 3, 3, 3, 3, 3],
       status: [0, 1, 1, 1, 0, 0],

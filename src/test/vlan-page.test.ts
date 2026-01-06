@@ -20,7 +20,8 @@ describe('VlanPage', () => {
 
     const result = await client.vlan.load();
     expect(result.isResult()).toBe(true);
+    const vlans = result.getResult();
 
-    expect(client.vlan.vlans).toEqual([]);
+    expect(vlans).toEqual([]);
   });
 });

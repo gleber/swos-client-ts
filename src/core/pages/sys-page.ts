@@ -17,13 +17,13 @@ export class SysPage {
     this.numPorts = numPorts;
   }
 
-  async load(): Promise<Either<void, SwOSError>> {
+  async load(): Promise<Either<Sys, SwOSError>> {
     return (await this.client.fetch('/sys.b')).flatMap(response => {
       try {
         const fixed = fixJson(response);
         const raw: RawSysStatus = JSON.parse(fixed);
 
-        this.sys = {
+        const sys: Sys = {
           mac: hexToMac(raw.mac),
           serialNumber: raw.sid,
           identity: hexToString(raw.id),
@@ -54,7 +54,7 @@ export class SysPage {
           addressAcquisition: parseHexInt(raw.iptp),
           staticIpAddress: intToIp(parseHexInt(raw.sip)),
         };
-        return Either.result(undefined);
+        return Either.result(sys);
       } catch (e) {
         return Either.error(new SwOSError(`Sys load failed: ${(e as Error).message}\nResponse: ${response}`));
       }
