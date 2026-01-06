@@ -68,6 +68,11 @@ export function ipToInt(ip: string): number {
   return (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]
 }
 
+export function ipToIntLE(ip: string): number {
+  const parts = ip.split('.').map(Number)
+  return parts[0] | (parts[1] << 8) | (parts[2] << 16) | (parts[3] << 24)
+}
+
 export function hexToMac(hex: string): string {
   return hex.match(/.{1,2}/g)?.join(':') || ''
 }

@@ -108,4 +108,31 @@ describe('FwdPage', () => {
       ],
     })
   })
+  it('should save fwd data', async () => {
+    const rawResponse =
+      '{ir:0,or:0,fp1:3f,fp2:3f,fp3:3f,fp4:3f,fp5:3f,fp6:3f,lck:0,imr:0,vlan:["1","1","1","1","1","1"],dvid:["1","1","1","1","1","1"],vlni:["0","0","0","0","0","0"],srt:["0","0","0","0","0","0"]}'
+
+    server.use(
+      http.get('http://192.168.1.4/fwd.b', () => {
+        return HttpResponse.text(rawResponse)
+      }),
+      http.post('http://192.168.1.4/fwd.b', async ({ request }) => {
+        const body = await request.text()
+        // Check changed fields
+        // locked port 0 -> lck: 0x01
+        expect(body).toContain('lck:0x1') // assuming hex format 0x...
+        expect(body).toContain('fp1:0x3F')
+        return HttpResponse.text(rawResponse)
+      })
+    )
+
+    await client.fwd.load()
+    if (client.fwd.fwd) {
+      // Toggle locked on first port
+      client.fwd.fwd.ports[0].locked = true;
+    }
+
+    const result = await client.fwd.save()
+    expect(result.isResult()).toBe(true)
+  })
 })

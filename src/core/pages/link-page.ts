@@ -1,17 +1,21 @@
 import { Either } from '../../types/either.js'
 import { SwOSError } from '../../types/error.js'
-import type { Link, LinkConfig, PoeMode, PoeStatus, RawLinkStatus } from '../../types/link.js'
+import type { Link, PoeMode, PoeStatus, RawLinkStatus } from '../../types/link.js'
+import { LinkRequest } from '../../types/requests.js';
 import {
   fixJson,
   hexToBoolArray,
   hexToString,
   parseHexInt,
   toMikrotik,
+  boolArrayToHex,
+  stringToHex,
 } from '../../utils/parsers.js'
 import type { SwOSClient } from '../swos-client.js'
 
 export class LinkPage {
   private client: SwOSClient
+  public links: Link[] = [];
 
   constructor(client: SwOSClient) {
     this.client = client
@@ -23,6 +27,10 @@ export class LinkPage {
         const fixed = fixJson(response)
         const raw: RawLinkStatus = JSON.parse(fixed)
         const numPorts = raw.nm.length
+
+        // Populate this.links
+        const links: Link[] = []
+        // ... parsing logic ... 
         const en = hexToBoolArray(raw.en, numPorts)
         const an = hexToBoolArray(raw.an, numPorts)
         const lnk = hexToBoolArray(raw.lnk, numPorts)
@@ -30,7 +38,6 @@ export class LinkPage {
         const dpxc = hexToBoolArray(raw.dpxc, numPorts)
         const fct = hexToBoolArray(raw.fct, numPorts)
 
-        const links: Link[] = []
         for (let i = 0; i < numPorts; i++) {
           const name = hexToString(raw.nm[i])
           const poeMode = raw.poe ? (parseHexInt(raw.poe[i]) as PoeMode) : 0
@@ -56,26 +63,32 @@ export class LinkPage {
             current,
           })
         }
+        this.links = links;
         return Either.result(links)
       } catch (e) {
         return Either.error(
-          new SwOSError(`Link load failed: ${(e as Error).message}\nResponse: ${response || 'N/A'}`)
+          new SwOSError(`Link load failed: ${(e as Error).message} \nResponse: ${response || 'N/A'} `)
         )
       }
     })
   }
 
-  async save(links: Link[]): Promise<Either<Link[], SwOSError>> {
-    const change = this.store(links)
+  async save(): Promise<Either<void, SwOSError>> {
+    const change = this.store(this.links)
     const postResult = await this.client.post('/link.b', toMikrotik(change))
-    return postResult.fold(
-      () => this.load(),
-      (e) => Promise.resolve(Either.error(e))
-    )
+    if (postResult.isError()) {
+      return Either.error(postResult.getError())
+    }
+    // Reload to confirm/refresh state
+    const loadResult = await this.load();
+    if (loadResult.isError()) {
+      return Either.error(loadResult.getError())
+    }
+    return Either.result(undefined);
   }
 
-  private store(links: Link[]): LinkConfig {
-    const names = links.map((link) => link.name)
+  private store(links: Link[]): LinkRequest {
+    const names = links.map((link) => stringToHex(link.name))
     const en = links.map((link) => link.enabled)
     const an = links.map((link) => link.autoNegotiation)
     const spdc = links.map((link) => link.speedControl)
@@ -86,11 +99,11 @@ export class LinkPage {
 
     return {
       nm: names,
-      en: en.reduce((mask, enabled, i) => mask | (enabled ? 1 << i : 0), 0),
-      an: an.reduce((mask, auto, i) => mask | (auto ? 1 << i : 0), 0),
+      en: parseHexInt(boolArrayToHex(en)),
+      an: parseHexInt(boolArrayToHex(an)),
       spdc,
-      dpxc: dpxc.reduce((mask, control, i) => mask | (control ? 1 << i : 0), 0),
-      fct: fct.reduce((mask, flow, i) => mask | (flow ? 1 << i : 0), 0),
+      dpxc: parseHexInt(boolArrayToHex(dpxc)),
+      fct: parseHexInt(boolArrayToHex(fct)),
       poe,
       prio,
     }

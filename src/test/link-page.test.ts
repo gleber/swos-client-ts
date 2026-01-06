@@ -80,7 +80,38 @@ describe('LinkPage', () => {
     }
 
     // Save
-    const result = await client.links.save(links)
+    const result = await client.links.save()
+    expect(result.isResult()).toBe(true)
+  })
+
+  it('should save links successfully', async () => {
+    const rawResponseStr =
+      '{en:"0x3f",lnk:"0x1e",dpx:"0x2e",dpxc:"0x3f",fct:"0x3f",an:"0x3f",poe:["0x0","0x0","0x0","0x0","0x0","0x0"],prio:["0x0","0x0","0x0","0x0","0x0","0x0"],poes:["0x0","0x0","0x0","0x0","0x0","0x0"],spdc:["0x0","0x0","0x0","0x0","0x0","0x0"],pwr:["0x0","0x0","0x0","0x0","0x0","0x0"],curr:["0x0","0x0","0x0","0x0","0x0","0x0"],nm:["506f7274310a","506f7274320a","506f7274330a","506f7274350a","506f7274350a","5366700a"],spd:["0x0","0x0","0x0","0x0","0x0","0x0"]}'
+
+    server.use(
+      http.get('http://192.168.88.1/link.b', () => {
+        return HttpResponse.text(rawResponseStr)
+      }),
+      http.post('http://192.168.88.1/link.b', async ({ request }) => {
+        const body = await request.text()
+        expect(body).toContain('nm')
+        expect(body).toContain('en:0x3F') // Check enabled mask
+        return HttpResponse.text(rawResponseStr)
+      })
+    )
+
+    const client = new SwOSClient('192.168.88.1', 'admin', '')
+    // Load initial state
+    await client.links.load()
+
+    // Modify a link
+    if (client.links.links[0]) {
+      client.links.links[0].enabled = true;
+    }
+
+    const result = await client.links.save()
+
+
     expect(result.isResult()).toBe(true)
   })
 

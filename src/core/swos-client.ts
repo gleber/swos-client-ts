@@ -120,4 +120,15 @@ export class SwOSClient {
       rstp,
     })
   }
+
+  async save(): Promise<Either<void, SwOSError>> {
+    const pages = [this.links, this.sys, this.vlan, this.fwd, this.rstp];
+    for (const page of pages) {
+      const result = await page.save();
+      if (result.isError()) {
+        return Either.error(result.getError());
+      }
+    }
+    return Either.result(undefined);
+  }
 }
