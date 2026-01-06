@@ -1,0 +1,30 @@
+{
+  "name": "swos-cli",
+  "version": "1.0.0",
+  "description": "CLI to manage Mikrotik SwOS devices",
+  "main": "dist/index.js",
+  "bin": {
+    "swos-cli": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "vitest",
+    "lint": "@biomejs/biome check .",
+    "format": "@biomejs/biome format --write ."
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@biomejs/biome": "^1.8.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "axios": "^1.6.0",
+    "zod": "^3.22.0",
+    "digest-fetch": "^1.3.0"
+  }
+}
