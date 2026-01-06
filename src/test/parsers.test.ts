@@ -73,7 +73,7 @@ describe('parsers', () => {
 
   describe('intToIp', () => {
     it('should convert int to IP', () => {
-      expect(intToIp(3232235776)).toBe('192.168.1.0');
+      expect(intToIp(3232235776)).toBe('0.1.168.192');
     });
   });
 

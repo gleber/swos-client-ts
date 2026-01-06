@@ -48,3 +48,14 @@ export interface RawLinkStatus {
   curr: string[];
   pwr: string[];
 }
+
+export interface LinkConfig {
+  nm: string[];
+  en: number;
+  an: number;
+  spdc: number[];
+  dpxc: number;
+  fct: number;
+  poe: number[]; // or PoeMode[]
+  prio: number[];
+}

@@ -18,7 +18,8 @@ describe('RstpPage', () => {
       })
     );
 
-    await client.rstp.load();
+    const result = await client.rstp.load();
+    expect(result.isResult()).toBe(true);
 
     expect(client.rstp.rstp).toMatchObject({
       enabled: true,

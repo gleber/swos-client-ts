@@ -1,4 +1,6 @@
 import DigestFetch from 'digest-fetch';
+import { Either } from '../types/either.js';
+import { SwOSError } from '../types/error.js';
 import { LinkPage } from './pages/link-page.js';
 import { SfpPage } from './pages/sfp-page.js';
 import { SysPage } from './pages/sys-page.js';
@@ -28,38 +30,66 @@ export class SwOSClient {
     this.rstp = new RstpPage(this);
   }
 
-  async fetch(endpoint: string): Promise<string> {
-    const url = `${this.baseUrl}${endpoint}`;
-    const response = await this.client.fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  async fetch(endpoint: string): Promise<Either<string, SwOSError>> {
+    try {
+      const url = `${this.baseUrl}${endpoint}`;
+      const response = await this.client.fetch(url);
+      if (!response.ok) {
+        return Either.error(new SwOSError(`HTTP ${response.status}: ${response.statusText}`));
+      }
+      const text = await response.text();
+      return Either.result(text);
+    } catch (e) {
+      return Either.error(new SwOSError((e as Error).message));
     }
-    return response.text();
   }
 
-  async post(endpoint: string, body: string): Promise<void> {
-    const url = `${this.baseUrl}${endpoint}`;
-    const response = await this.client.fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain',
+  async post(endpoint: string, body: string): Promise<Either<void, SwOSError>> {
+    try {
+      const url = `${this.baseUrl}${endpoint}`;
+      const response = await this.client.fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+        body,
+      });
+      if (!response.ok) {
+        return Either.error(new SwOSError(`HTTP ${response.status}: ${response.statusText}`));
+      }
+      return Either.result(undefined);
+    } catch (e) {
+      return Either.error(new SwOSError((e as Error).message));
+    }
+  }
+
+  async fetchAll(): Promise<Either<void, SwOSError>> {
+    return (await this.links.load()).fold<Promise<Either<void, SwOSError>>>(
+      async () => {
+        const numPorts = this.links.links.length;
+        this.sys.setNumPorts(numPorts);
+        this.vlan.setNumPorts(numPorts);
+
+        const sfpResult = await this.sfp.load();
+        sfpResult.fold(() => { }, err => console.error(err.message));
+
+        return (await this.sys.load()).fold<Promise<Either<void, SwOSError>>>(
+          async () => {
+            const vlanResult = await this.vlan.load();
+            vlanResult.fold(() => { }, err => console.error(err.message));
+
+            const fwdResult = await this.fwd.load();
+            fwdResult.fold(() => { }, err => console.error(err.message));
+
+            const rstpResult = await this.rstp.load();
+            rstpResult.fold(() => { }, err => console.error(err.message));
+
+            return Either.result(undefined);
+          },
+          err => Promise.resolve(Either.error(err))
+        );
       },
-      body,
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-  }
-
-  async fetchAll(): Promise<void> {
-    await this.links.load();
-    const numPorts = this.links.links.length;
-    this.sys.setNumPorts(numPorts);
-    this.vlan.setNumPorts(numPorts);
-    try { await this.sfp.load(); } catch (e) { console.error((e as Error).message); }
-    await this.sys.load();
-    try { await this.vlan.load(); } catch (e) { console.error((e as Error).message); }
-    try { await this.fwd.load(); } catch (e) { console.error((e as Error).message); }
-    try { await this.rstp.load(); } catch (e) { console.error((e as Error).message); }
+      err => Promise.resolve(Either.error(err))
+    );
   }
 }

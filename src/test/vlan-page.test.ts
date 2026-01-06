@@ -18,7 +18,8 @@ describe('VlanPage', () => {
       })
     );
 
-    await client.vlan.load();
+    const result = await client.vlan.load();
+    expect(result.isResult()).toBe(true);
 
     expect(client.vlan.vlans).toEqual([]);
   });

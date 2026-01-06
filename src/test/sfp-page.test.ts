@@ -18,7 +18,8 @@ describe('SfpPage', () => {
       })
     );
 
-    await client.sfp.load();
+    const result = await client.sfp.load();
+    expect(result.isResult()).toBe(true);
 
     expect(client.sfp.sfp).toMatchObject({
       vendor: '',

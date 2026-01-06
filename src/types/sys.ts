@@ -31,18 +31,16 @@ export interface Sys {
 }
 
 export interface RawSysStatus {
+  upt: string;
+  ip: string;
   mac: string;
   sid: string;
   id: string;
   ver: string;
   brd: string;
-  rmac: string;
-  upt: string;
-  ip: string;
   bld: string;
   wdt: string;
   dsc: string;
-  pdsc: string;
   ivl: string;
   alla: string;
   allm: string;
@@ -50,10 +48,9 @@ export interface RawSysStatus {
   avln: string;
   prio: string;
   cost: string;
-  frmc: string;
   rpr: string;
+  rmac: string;
   igmp: string;
-  igmq: string;
   sip: string;
   iptp: string;
   volt: string;
@@ -61,5 +58,9 @@ export interface RawSysStatus {
   lcbl: string;
   upgr: string;
   igfl: string;
-  igve: string;
+  // Optional fields
+  pdsc?: string;
+  igmq?: string;
+  igve?: string;
+  frmc?: string;
 }

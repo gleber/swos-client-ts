@@ -18,7 +18,8 @@ describe('FwdPage', () => {
       })
     );
 
-    await client.fwd.load();
+    const result = await client.fwd.load();
+    expect(result.isResult()).toBe(true);
 
     expect(client.fwd.fwd).toMatchObject({
       enabled: [true, true, true, true, true, true],

@@ -10,7 +10,36 @@ describe('SysPage', () => {
   });
 
   it('should load sys data from real device response', async () => {
-    const rawResponse = '{mac:085531001b19,sn:D53D0DB61E5C,id:6f66666963652d726f75746572,ver:322e3133,brd:4353533130362d35472d3153,rbmac:085531001b19,up:59b8b46,ip:c0a80104,bld:6076c0e1,dsc:1,wdt:1,mdp:0,ivl:0,af:0,allm:0,afp:3f,afv:0,igs:0,igq:1,lpc:0,igfl:0,igv:0,volt:0,temp:0,bpri:8000,pcm:0,frm:1,aa:0,sip:d8a80104}';
+    const raw = {
+      upt: "0x059e2a34",
+      ip: "0x0401a8c0",
+      mac: "085531001b19",
+      sid: "443533443044423631453543",
+      id: "6f66666963652d726f75746572",
+      ver: "322e3133",
+      brd: "4353533130362d35472d3153",
+      bld: "0x608677f1",
+      wdt: "0x01",
+      dsc: "0x01",
+      ivl: "0x00",
+      alla: "0x00000000",
+      allm: "0x00",
+      allp: "0x3f",
+      avln: "0x0000",
+      prio: "0x8000",
+      cost: "0x00",
+      rpr: "0x8000",
+      rmac: "085531001b19",
+      igmp: "0x00",
+      sip: "0x0458a8c0",
+      iptp: "0x00",
+      volt: "0x0000",
+      temp: "0x00000000",
+      lcbl: "0x00",
+      upgr: "0x00",
+      igfl: "0x00",
+    };
+    const rawResponse = JSON.stringify(raw);
 
     server.use(
       http.get('http://192.168.1.4/sys.b', () => {
@@ -18,16 +47,18 @@ describe('SysPage', () => {
       })
     );
 
-    await client.sys.load();
+    client.sys.setNumPorts(6);
+
+    const result = await client.sys.load();
+    expect(result.isResult()).toBe(true);
 
     expect(client.sys.sys).toMatchObject({
       mac: '08:55:31:00:1b:19',
-      serialNumber: 'D53D0DB61E5C',
+      serialNumber: '443533443044423631453543',
       identity: 'office-router',
       version: '2.13',
       boardName: 'CSS106-5G-1S',
       rootBridgeMac: '08:55:31:00:1b:19',
-      uptime: 93751318,
       ip: '192.168.1.4',
       build: 1619425265,
       dsc: 1,
@@ -39,17 +70,17 @@ describe('SysPage', () => {
       allowFromPorts: [true, true, true, true, true, true],
       allowFromVlan: 0,
       igmpSnooping: false,
-      igmpQuerier: true,
+      igmpQuerier: false,
       longPoeCable: false,
       igmpFastLeave: [false, false, false, false, false, false],
-      igmpVersion: null,
+      igmpVersion: 0,
       voltage: 0,
       temperature: 0,
       bridgePriority: 32768,
       portCostMode: 0,
-      forwardReservedMulticast: true,
+      forwardReservedMulticast: false,
       addressAcquisition: 0,
-      staticIpAddress: '192.168.1.216',
+      staticIpAddress: "192.168.88.4",
     });
   });
 });

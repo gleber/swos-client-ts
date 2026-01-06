@@ -1,4 +1,6 @@
 import { SwOSClient } from '../swos-client.js';
+import { Either } from '../../types/either.js';
+import { SwOSError } from '../../types/error.js';
 import { RawVlanStatus, Vlan, VlanPortMode } from '../../types/vlan.js';
 import { fixJson, parseHexInt } from '../../utils/parsers.js';
 
@@ -15,20 +17,21 @@ export class VlanPage {
     this.numPorts = num;
   }
 
-  async load(): Promise<void> {
-    let response = '';
-    try {
-      response = await this.client.fetch('/vlan.b');
-      const fixed = fixJson(response);
-      const raw: RawVlanStatus[] = JSON.parse(fixed);
-      this.vlans = raw.map(r => ({
-        id: parseHexInt(r.vid),
-        independentVlanLookup: parseHexInt(r.ivl) !== 0,
-        igmpSnooping: parseHexInt(r.igmp) !== 0,
-        portMode: r.prt.map(p => parseHexInt(p) as VlanPortMode),
-      }));
-    } catch (e) {
-      throw new Error(`VLAN load failed: ${(e as Error).message}\nResponse: ${response || 'N/A'}`);
-    }
+  async load(): Promise<Either<void, SwOSError>> {
+    return (await this.client.fetch('/vlan.b')).flatMap(response => {
+      try {
+        const fixed = fixJson(response);
+        const raw: RawVlanStatus[] = JSON.parse(fixed);
+        this.vlans = raw.map(r => ({
+          id: parseHexInt(r.vid),
+          independentVlanLookup: parseHexInt(r.ivl) !== 0,
+          igmpSnooping: parseHexInt(r.igmp) !== 0,
+          portMode: r.prt.map(p => parseHexInt(p) as VlanPortMode),
+        }));
+        return Either.result(undefined);
+      } catch (e) {
+        return Either.error(new SwOSError(`VLAN load failed: ${(e as Error).message}\nResponse: ${response || 'N/A'}`));
+      }
+    });
   }
 }

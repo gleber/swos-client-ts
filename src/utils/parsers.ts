@@ -55,7 +55,12 @@ export function intToHex(num: number): string {
 }
 
 export function intToIp(num: number): string {
-  return [(num >>> 24) & 255, (num >>> 16) & 255, (num >>> 8) & 255, num & 255].join('.');
+  // Device sends IPs in little-endian byte order
+  const b1 = num & 255;
+  const b2 = (num >>> 8) & 255;
+  const b3 = (num >>> 16) & 255;
+  const b4 = (num >>> 24) & 255;
+  return [b1, b2, b3, b4].join('.');
 }
 
 export function ipToInt(ip: string): number {
