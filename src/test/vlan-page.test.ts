@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SwOSClient } from '../core/swos-client.js'
 import { http, HttpResponse, server } from './setup.js'
@@ -18,10 +19,7 @@ describe('VlanPage', () => {
       })
     )
 
-    const result = await client.vlan.load()
-    expect(result.isResult()).toBe(true)
-    const vlans = result.getResult()
-
+    const vlans = await Effect.runPromise(client.vlan.load())
     expect(vlans).toEqual([])
   })
   it('should manipulate and save vlan data', async () => {
@@ -36,7 +34,7 @@ describe('VlanPage', () => {
         expect(body).toContain('vid:0x64') // VLAN 100 (hex 0x64)
         expect(body).toContain('prt:[0x0,0x0,0x0,0x0,0x0,0x0]') // Default LeaveAsIs (0)
         // VlanPortMode.LeaveAsIs = ?
-        // I need to check VlanPortMode enum values. 
+        // I need to check VlanPortMode enum values.
         // Assuming defaults.
         return HttpResponse.text(rawResponse)
       })
@@ -44,9 +42,7 @@ describe('VlanPage', () => {
 
     client.vlan.setNumPorts(6)
     client.vlan.setNumPorts(6)
-    const result = await client.vlan.load()
-    expect(result.isResult()).toBe(true)
-    const vlans = result.getResult()
+    const vlans = await Effect.runPromise(client.vlan.load())
 
     // Add VLAN 100
     // Manually push to array as helpers were removed
@@ -58,12 +54,11 @@ describe('VlanPage', () => {
     })
 
     // Check if new vlan has default props
-    const vlan100 = vlans.find(v => v.id === 100)
+    const vlan100 = vlans.find((v) => v.id === 100)
     expect(vlan100).toBeDefined()
     expect(vlan100?.portMode.length).toBe(6)
 
     // Save
-    const saveResult = await client.vlan.save(vlans)
-    expect(saveResult.isResult()).toBe(true)
+    await Effect.runPromise(client.vlan.save(vlans))
   })
 })

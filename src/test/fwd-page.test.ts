@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SwOSClient } from '../core/swos-client.js'
 import { http, HttpResponse, server } from './setup.js'
@@ -19,10 +20,7 @@ describe('FwdPage', () => {
       })
     )
 
-    const result = await client.fwd.load()
-    if (result.isError()) console.error(result.getError().message)
-    expect(result.isResult()).toBe(true)
-    const fwd = result.getResult()
+    const fwd = await Effect.runPromise(client.fwd.load())
 
     expect(fwd).toMatchObject({
       mirror: 0,
@@ -126,14 +124,11 @@ describe('FwdPage', () => {
       })
     )
 
-    const loadResult = await client.fwd.load()
-    if (loadResult.isError()) throw loadResult.getError()
-    const fwd = loadResult.getResult()
+    const fwd = await Effect.runPromise(client.fwd.load())
 
     // Toggle locked on first port
     fwd.ports[0].locked = true
 
-    const result = await client.fwd.save(fwd)
-    expect(result.isResult()).toBe(true)
+    await Effect.runPromise(client.fwd.save(fwd))
   })
 })

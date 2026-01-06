@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SwOSClient } from '../core/swos-client.js'
 import { http, HttpResponse, server } from './setup.js'
@@ -18,9 +19,7 @@ describe('RstpPage', () => {
       })
     )
 
-    const result = await client.rstp.load()
-    expect(result.isResult()).toBe(true)
-    const rstp = result.getResult()
+    const rstp = await Effect.runPromise(client.rstp.load())
 
     expect(rstp).toMatchObject({
       enabled: true,
@@ -54,13 +53,10 @@ describe('RstpPage', () => {
     // But RstpPage.load sets numPorts from role.length.
     // So calling load is enough.
 
-    const loadResult = await client.rstp.load()
-    expect(loadResult.isResult()).toBe(true)
-    const rstp = loadResult.getResult()
+    const rstp = await Effect.runPromise(client.rstp.load())
 
     rstp.enabled = true
 
-    const result = await client.rstp.save(rstp)
-    expect(result.isResult()).toBe(true)
+    await Effect.runPromise(client.rstp.save(rstp))
   })
 })

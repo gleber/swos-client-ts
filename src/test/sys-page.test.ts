@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SwOSClient } from '../core/swos-client.js'
 import { http, HttpResponse, server } from './setup.js'
@@ -49,9 +50,7 @@ describe('SysPage', () => {
 
     client.sys.setNumPorts(6)
 
-    const result = await client.sys.load()
-    expect(result.isResult()).toBe(true)
-    const sys = result.getResult()
+    const sys = await Effect.runPromise(client.sys.load())
 
     expect(sys).toMatchObject({
       mac: '08:55:31:00:1b:19',
@@ -146,15 +145,12 @@ describe('SysPage', () => {
     client.sys.setNumPorts(6)
 
     // Load first
-    const loadResult = await client.sys.load()
-    expect(loadResult.isResult()).toBe(true)
-    const sys = loadResult.getResult()
+    const sys = await Effect.runPromise(client.sys.load())
 
     // Modify
     sys.identity = 'test'
     sys.staticIpAddress = '192.168.1.5'
 
-    const result = await client.sys.save(sys)
-    expect(result.isResult()).toBe(true)
+    await Effect.runPromise(client.sys.save(sys))
   })
 })

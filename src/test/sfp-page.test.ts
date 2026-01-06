@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SwOSClient } from '../core/swos-client.js'
 import { http, HttpResponse, server } from './setup.js'
@@ -18,9 +19,7 @@ describe('SfpPage', () => {
       })
     )
 
-    const result = await client.sfp.load()
-    expect(result.isResult()).toBe(true)
-    const sfp = result.getResult()
+    const sfp = await Effect.runPromise(client.sfp.load())
 
     expect(sfp).toHaveLength(1)
     expect(sfp[0]).toMatchObject({
@@ -43,9 +42,7 @@ describe('SfpPage', () => {
       })
     )
 
-    const result = await client.sfp.load()
-    expect(result.isResult()).toBe(true)
-    const sfp = result.getResult()
+    const sfp = await Effect.runPromise(client.sfp.load())
 
     expect(Array.isArray(sfp)).toBe(true)
     expect(sfp).toHaveLength(2)

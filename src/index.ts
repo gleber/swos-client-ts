@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import 'dotenv/config'
 import { Command } from 'commander'
 import { SwOSClient } from './core/swos-client.js'
@@ -20,13 +21,18 @@ program
     const pass = options.pass || envPass
 
     const client = new SwOSClient(ip, user, pass)
-    const result = await client.fetchAll()
-    if (result.isError()) {
-      console.error('Error:', result.getError().message)
+
+    try {
+      const data = await Effect.runPromise(client.fetchAll())
+      console.log(JSON.stringify(data, null, 2))
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.error('Error:', e.message)
+      } else {
+        console.error('Unknown Error:', e)
+      }
       process.exit(1)
     }
-    const data = result.getResult()
-    console.log(JSON.stringify(data, null, 2))
   })
 
 program.parse()

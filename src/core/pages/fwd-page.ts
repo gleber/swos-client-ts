@@ -1,9 +1,15 @@
-import { Either } from '../../types/either.js'
+import { Effect } from 'effect'
 import { SwOSError } from '../../types/error.js'
-import { Fwd, RawFwdStatus } from '../../types/fwd.js'
-import { FwdRequest } from '../../types/requests.js'
-import { fixJson, hexToBoolArray, parseHexInt, toMikrotik, boolArrayToHex } from '../../utils/parsers.js'
-import { SwOSClient } from '../swos-client.js'
+import type { Fwd, RawFwdStatus } from '../../types/fwd.js'
+import type { FwdRequest } from '../../types/requests.js'
+import {
+  boolArrayToHex,
+  fixJson,
+  hexToBoolArray,
+  parseHexInt,
+  toMikrotik,
+} from '../../utils/parsers.js'
+import type { SwOSClient } from '../swos-client.js'
 
 export class FwdPage {
   private client: SwOSClient
@@ -22,67 +28,81 @@ export class FwdPage {
    * - `raw.dvid` maps to `vlanId`
    * - `raw.vlni` maps to `vlanMode`
    */
-  async load(): Promise<Either<Fwd, SwOSError>> {
-    return (await this.client.fetch('/fwd.b')).flatMap((response) => {
-      try {
-        const fixed = fixJson(response)
-        const raw: RawFwdStatus = JSON.parse(fixed)
-        this.numPorts = raw.vlan.length
-        const fwd: Fwd = {
-          mirror: parseHexInt(raw.imr), // imr is 0-indexed port index
-          ports: [],
-        }
+  load(): Effect.Effect<Fwd, SwOSError> {
+    const self = this
+    return Effect.gen(function* (_) {
+      const response = yield* _(self.client.fetch('/fwd.b'))
 
-        const enabled = [
-          parseHexInt(raw.fp1) !== 0,
-          parseHexInt(raw.fp2) !== 0,
-          parseHexInt(raw.fp3) !== 0,
-          parseHexInt(raw.fp4) !== 0,
-          parseHexInt(raw.fp5) !== 0,
-          parseHexInt(raw.fp6) !== 0,
-        ]
-        // Note: RawFwdStatus fields like 'bcst', 'mcst', 'ucst' are not in interface but might exist.
-        // Failing back to defaults for now as per old code.
-        // Old code mapped: vlan -> defaultVlanId, dvid -> vlanId.
-        // This seems swapped naming-wise but preserving behavior.
-        const defaultVlanIds = raw.vlan.map((x) => parseHexInt(x))
-        const vlanIds = raw.dvid.map((x) => parseHexInt(x))
-        const vlanModes = raw.vlni.map((x) => parseHexInt(x))
-        const rateLimits = raw.srt.map((x) => parseHexInt(x))
-        const lockedVal = parseHexInt(raw.lck)
+      return yield* _(
+        Effect.try(() => {
+          const fixed = fixJson(response)
+          const raw: RawFwdStatus = JSON.parse(fixed)
+          self.numPorts = raw.vlan.length
 
-        for (let i = 0; i < this.numPorts; i++) {
-          fwd.ports.push({
-            enabled: enabled[i] || false,
-            linkUp: false, // Not available
-            flowControl: false, // Not available
-            defaultVlanId: defaultVlanIds[i] || 0,
-            vlanId: vlanIds[i] || 0,
-            vlanMode: vlanModes[i] || 0,
-            locked: (lockedVal & (1 << i)) !== 0, // lck is bitmask
-            rateLimit: rateLimits[i] || 0,
-            broadcastLimit: 0,
-            multicastLimit: 0,
-            unicastLimit: 0,
-          })
-        }
-        this.fwd = fwd
-        return Either.result(fwd)
-      } catch (e) {
-        return Either.error(
-          new SwOSError(`FWD load failed: ${(e as Error).message} \nResponse: ${response || 'N/A'} `)
+          const fwd: Fwd = {
+            mirror: parseHexInt(raw.imr),
+            ports: [],
+          }
+
+          const enabled = [
+            parseHexInt(raw.fp1) !== 0,
+            parseHexInt(raw.fp2) !== 0,
+            parseHexInt(raw.fp3) !== 0,
+            parseHexInt(raw.fp4) !== 0,
+            parseHexInt(raw.fp5) !== 0,
+            parseHexInt(raw.fp6) !== 0,
+          ]
+
+          const defaultVlanIds = raw.vlan.map((x) => parseHexInt(x))
+          const vlanIds = raw.dvid.map((x) => parseHexInt(x))
+          const vlanModes = raw.vlni.map((x) => parseHexInt(x))
+          const rateLimits = raw.srt.map((x) => parseHexInt(x))
+          const lockedVal = parseHexInt(raw.lck)
+
+          for (let i = 0; i < self.numPorts; i++) {
+            fwd.ports.push({
+              enabled: enabled[i] || false,
+              linkUp: false,
+              flowControl: false,
+              defaultVlanId: defaultVlanIds[i] || 0,
+              vlanId: vlanIds[i] || 0,
+              vlanMode: vlanModes[i] || 0,
+              locked: (lockedVal & (1 << i)) !== 0,
+              rateLimit: rateLimits[i] || 0,
+              broadcastLimit: 0,
+              multicastLimit: 0,
+              unicastLimit: 0,
+            })
+          }
+          self.fwd = fwd
+          return fwd
+        }).pipe(
+          Effect.mapError(
+            (e) =>
+              new SwOSError(
+                `FWD load failed: ${(e as Error).message} \nResponse: ${response || 'N/A'}`
+              )
+          )
         )
-      }
+      )
     })
   }
 
-  async save(): Promise<Either<void, SwOSError>> {
-    if (!this.fwd) return Either.error(new SwOSError('FWD data not loaded'))
-    const change = this.store(this.fwd)
-    const postResult = await this.client.post('/fwd.b', toMikrotik(change))
-    if (postResult.isError()) return Either.error(postResult.getError())
+  save(data: Fwd): Effect.Effect<void, SwOSError> {
+    const self = this
+    return Effect.gen(function* (_) {
+      const change = self.store(data)
+      yield* _(self.client.post('/fwd.b', toMikrotik(change)))
+      yield* _(self.load())
+    })
+  }
 
-    return (await this.load()).map(() => undefined)
+  async loadAsync(): Promise<Fwd> {
+    return Effect.runPromise(this.load())
+  }
+
+  async saveAsync(data: Fwd): Promise<void> {
+    return Effect.runPromise(this.save(data))
   }
 
   private store(fwd: Fwd): FwdRequest {

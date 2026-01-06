@@ -1,5 +1,5 @@
 import DigestFetch from 'digest-fetch'
-import { Either } from '../types/either.js'
+import { Effect } from 'effect'
 import { SwOSError } from '../types/error.js'
 import type { Fwd } from '../types/fwd.js'
 import type { Link } from '../types/link.js'
@@ -50,37 +50,37 @@ export class SwOSClient {
     this.rstp = new RstpPage(this)
   }
 
-  async fetch(endpoint: string): Promise<Either<string, SwOSError>> {
-    try {
-      const url = `${this.baseUrl}${endpoint}`
-      const response = await this.client.fetch(url)
-      if (!response.ok) {
-        return Either.error(new SwOSError(`HTTP ${response.status}: ${response.statusText}`))
-      }
-      const text = await response.text()
-      return Either.result(text)
-    } catch (e) {
-      return Either.error(new SwOSError((e as Error).message))
-    }
+  fetch(endpoint: string): Effect.Effect<string, SwOSError> {
+    return Effect.tryPromise({
+      try: async () => {
+        const url = `${this.baseUrl}${endpoint}`
+        const response = await this.client.fetch(url)
+        if (!response.ok) {
+          throw new SwOSError(`HTTP ${response.status}: ${response.statusText}`)
+        }
+        return await response.text()
+      },
+      catch: (e) => new SwOSError((e as Error).message),
+    })
   }
 
-  async post(endpoint: string, body: string): Promise<Either<void, SwOSError>> {
-    try {
-      const url = `${this.baseUrl}${endpoint}`
-      const response = await this.client.fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-        body,
-      })
-      if (!response.ok) {
-        return Either.error(new SwOSError(`HTTP ${response.status}: ${response.statusText}`))
-      }
-      return Either.result(undefined)
-    } catch (e) {
-      return Either.error(new SwOSError((e as Error).message))
-    }
+  post(endpoint: string, body: string): Effect.Effect<void, SwOSError> {
+    return Effect.tryPromise({
+      try: async () => {
+        const url = `${this.baseUrl}${endpoint}`
+        const response = await this.client.fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+          },
+          body,
+        })
+        if (!response.ok) {
+          throw new SwOSError(`HTTP ${response.status}: ${response.statusText}`)
+        }
+      },
+      catch: (e) => new SwOSError((e as Error).message),
+    })
   }
 
   /**
@@ -89,46 +89,46 @@ export class SwOSClient {
    * - fetches other pages (SFP, VLAN, FWD, RSTP) in parallel.
    * - gracefully handles failures in optional pages by returning undefined.
    */
-  async fetchAll(): Promise<Either<SwOSData, SwOSError>> {
-    const loadOptional = async <T>(page: Page<T>): Promise<T | undefined> => {
-      const result = await page.load()
-      if (result.isError()) {
-        console.error(result.getError().message)
-        return undefined
+  fetchAll(): Effect.Effect<SwOSData, SwOSError> {
+    const self = this
+    return Effect.gen(function* (_) {
+      const loadOptional = <T>(page: Page<T>) =>
+        Effect.match(page.load(), {
+          onFailure: (e) => {
+            console.error(e.message) // Log but don't fail for optional pages?
+            return undefined
+          },
+          onSuccess: (data) => data,
+        })
+
+      // Load Links first to get port count
+      const links = yield* _(self.links.load())
+      const numPorts = links.length
+
+      self.sys.setNumPorts(numPorts)
+      self.vlan.setNumPorts(numPorts)
+
+      // Load Sys
+      const sys = yield* _(self.sys.load())
+
+      // Load optional pages concurrently
+      const [sfp, vlan, fwd, rstp] = yield* _(
+        Effect.all([
+          loadOptional(self.sfp),
+          loadOptional(self.vlan),
+          loadOptional(self.fwd),
+          loadOptional(self.rstp),
+        ])
+      )
+
+      return {
+        links,
+        sys,
+        sfp,
+        vlan,
+        fwd,
+        rstp,
       }
-      return result.getResult()
-    }
-
-    const linksResult = await this.links.load()
-    if (linksResult.isError()) {
-      return Either.error(linksResult.getError())
-    }
-    const links = linksResult.getResult()
-
-    const numPorts = links.length
-    this.sys.setNumPorts(numPorts)
-    this.vlan.setNumPorts(numPorts)
-
-    const sysResult = await this.sys.load()
-    if (sysResult.isError()) {
-      return Either.error(sysResult.getError())
-    }
-    const sys = sysResult.getResult()
-
-    const [sfp, vlan, fwd, rstp] = await Promise.all([
-      loadOptional(this.sfp),
-      loadOptional(this.vlan),
-      loadOptional(this.fwd),
-      loadOptional(this.rstp),
-    ])
-
-    return Either.result({
-      links,
-      sys,
-      sfp,
-      vlan,
-      fwd,
-      rstp,
     })
   }
 
@@ -139,25 +139,40 @@ export class SwOSClient {
    *
    * @param data - The full SwOSData object containing updates
    */
-  async save(data: SwOSData): Promise<Either<void, SwOSError>> {
-    const savePage = async <T>(page: Page<T>, pageData?: T): Promise<Either<void, SwOSError>> => {
-      if (!pageData) return Either.result(undefined);
-      return page.save(pageData);
-    }
+  save(data: SwOSData): Effect.Effect<void, SwOSError> {
+    const self = this
+    return Effect.gen(function* (_) {
+      const savePage = <T>(page: Page<T>, pageData?: T) => {
+        if (!pageData) return Effect.void
+        return page.save(pageData)
+      }
 
-    const results = await Promise.all([
-      savePage(this.links, data.links),
-      savePage(this.sys, data.sys),
-      savePage(this.vlan, data.vlan),
-      savePage(this.fwd, data.fwd),
-      savePage(this.rstp, data.rstp),
-      // sfp is read only
-    ]);
+      yield* _(
+        Effect.all([
+          savePage(self.links, data.links),
+          savePage(self.sys, data.sys),
+          savePage(self.vlan, data.vlan),
+          savePage(self.fwd, data.fwd),
+          savePage(self.rstp, data.rstp),
+          // sfp is read only
+        ])
+      )
+    })
+  }
 
-    for (const result of results) {
-      if (result.isError()) return result;
-    }
+  async fetchAsync(endpoint: string): Promise<string> {
+    return Effect.runPromise(this.fetch(endpoint))
+  }
 
-    return Either.result(undefined)
+  async postAsync(endpoint: string, body: string): Promise<void> {
+    return Effect.runPromise(this.post(endpoint, body))
+  }
+
+  async fetchAllAsync(): Promise<SwOSData> {
+    return Effect.runPromise(this.fetchAll())
+  }
+
+  async saveAsync(data: SwOSData): Promise<void> {
+    return Effect.runPromise(this.save(data))
   }
 }

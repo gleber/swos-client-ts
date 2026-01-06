@@ -1,4 +1,4 @@
-import { Either } from '../../types/either.js'
+import { Effect } from 'effect'
 import { SwOSError } from '../../types/error.js'
 import type { SysRequest } from '../../types/requests.js'
 import type { RawSysStatus, Sys, SysPort } from '../../types/sys.js'
@@ -24,7 +24,7 @@ import type { SwOSClient } from '../swos-client.js'
 export class SysPage implements Page<Sys> {
   private numPorts = 0
 
-  constructor(private client: SwOSClient) { }
+  constructor(private client: SwOSClient) {}
 
   setNumPorts(numPorts: number) {
     this.numPorts = numPorts
@@ -40,69 +40,83 @@ export class SysPage implements Page<Sys> {
    * - upt -> uptime
    * - pds -> mikrotikDiscoveryProtocol (per port bitmask)
    */
-  async load(): Promise<Either<Sys, SwOSError>> {
-    return (await this.client.fetch('/sys.b')).flatMap((response) => {
-      try {
-        const fixed = fixJson(response)
-        const raw: RawSysStatus = JSON.parse(fixed)
+  load(): Effect.Effect<Sys, SwOSError> {
+    const self = this
+    return Effect.gen(function* (_) {
+      const response = yield* _(self.client.fetch('/sys.b'))
 
-        const mndp = hexToBoolArray(raw.pdsc || '0', this.numPorts)
-        const allowFromPorts = hexToBoolArray(raw.allp, this.numPorts)
-        const igmpFastLeave = hexToBoolArray(raw.igfl, this.numPorts)
+      return yield* _(
+        Effect.try(() => {
+          const fixed = fixJson(response)
+          const raw: RawSysStatus = JSON.parse(fixed)
 
-        const ports: SysPort[] = Array.from({ length: this.numPorts }, (_, i) => ({
-          mikrotikDiscoveryProtocol: mndp[i],
-          allowFrom: allowFromPorts[i],
-          igmpFastLeave: igmpFastLeave[i],
-        }))
+          const mndp = hexToBoolArray(raw.pdsc || '0', self.numPorts)
+          const allowFromPorts = hexToBoolArray(raw.allp, self.numPorts)
+          const igmpFastLeave = hexToBoolArray(raw.igfl, self.numPorts)
 
-        const sys: Sys = {
-          mac: hexToMac(raw.mac),
-          serialNumber: raw.sid,
-          identity: hexToString(raw.id),
-          version: hexToString(raw.ver),
-          boardName: hexToString(raw.brd),
-          rootBridgeMac: hexToMac(raw.rmac),
-          uptime: parseHexInt(raw.upt),
-          ip: intToIp(parseHexInt(raw.ip)),
-          build: parseHexInt(raw.bld),
-          dsc: parseHexInt(raw.dsc),
-          wdt: parseHexInt(raw.wdt),
-          independentVlanLookup: parseHexInt(raw.ivl) !== 0,
-          allowFrom: intToIp(parseHexInt(raw.alla)),
-          allm: parseHexInt(raw.allm),
-          allowFromVlan: parseHexInt(raw.avln),
-          igmpSnooping: parseHexInt(raw.igmp) !== 0,
-          igmpQuerier: raw.igmq ? parseHexInt(raw.igmq) !== 0 : false,
-          longPoeCable: parseHexInt(raw.lcbl) !== 0,
-          igmpVersion: raw.igve ? parseHexInt(raw.igve) : 0,
-          voltage: raw.volt ? parseHexInt(raw.volt) / 1000 : 0,
-          temperature: raw.temp ? parseHexInt(raw.temp) / 10 : 0,
-          bridgePriority: parseHexInt(raw.prio),
-          portCostMode: parseHexInt(raw.cost),
-          forwardReservedMulticast: raw.frmc ? parseHexInt(raw.frmc) !== 0 : false,
-          addressAcquisition: parseHexInt(raw.iptp),
-          staticIpAddress: intToIp(parseHexInt(raw.sip)),
-          ports,
-        }
-        return Either.result(sys)
-      } catch (e) {
-        return Either.error(
-          new SwOSError(
-            `Sys load failed: ${(e as Error).message} \nResponse: ${response || 'N/A'} `
+          const ports: SysPort[] = Array.from({ length: self.numPorts }, (_, i) => ({
+            mikrotikDiscoveryProtocol: mndp[i],
+            allowFrom: allowFromPorts[i],
+            igmpFastLeave: igmpFastLeave[i],
+          }))
+
+          return {
+            mac: hexToMac(raw.mac),
+            serialNumber: raw.sid,
+            identity: hexToString(raw.id),
+            version: hexToString(raw.ver),
+            boardName: hexToString(raw.brd),
+            rootBridgeMac: hexToMac(raw.rmac),
+            uptime: parseHexInt(raw.upt),
+            ip: intToIp(parseHexInt(raw.ip)),
+            build: parseHexInt(raw.bld),
+            dsc: parseHexInt(raw.dsc),
+            wdt: parseHexInt(raw.wdt),
+            independentVlanLookup: parseHexInt(raw.ivl) !== 0,
+            allowFrom: intToIp(parseHexInt(raw.alla)),
+            allm: parseHexInt(raw.allm),
+            allowFromVlan: parseHexInt(raw.avln),
+            igmpSnooping: parseHexInt(raw.igmp) !== 0,
+            igmpQuerier: raw.igmq ? parseHexInt(raw.igmq) !== 0 : false,
+            longPoeCable: parseHexInt(raw.lcbl) !== 0,
+            igmpVersion: raw.igve ? parseHexInt(raw.igve) : 0,
+            voltage: raw.volt ? parseHexInt(raw.volt) / 1000 : 0,
+            temperature: raw.temp ? parseHexInt(raw.temp) / 10 : 0,
+            bridgePriority: parseHexInt(raw.prio),
+            portCostMode: parseHexInt(raw.cost),
+            forwardReservedMulticast: raw.frmc ? parseHexInt(raw.frmc) !== 0 : false,
+            addressAcquisition: parseHexInt(raw.iptp),
+            staticIpAddress: intToIp(parseHexInt(raw.sip)),
+            ports,
+          }
+        }).pipe(
+          Effect.mapError(
+            (e) =>
+              new SwOSError(
+                `Sys load failed: ${(e as Error).message} \nResponse: ${response || 'N/A'}`
+              )
           )
         )
-      }
+      )
     })
   }
 
-  async save(sys: Sys): Promise<Either<void, SwOSError>> {
-    const change = this.store(sys)
-    const postResult = await this.client.post('/sys.b', toMikrotik(change))
-    if (postResult.isError()) return Either.error(postResult.getError())
+  save(sys: Sys): Effect.Effect<void, SwOSError> {
+    const self = this
+    return Effect.gen(function* (_) {
+      const change = self.store(sys)
+      yield* _(self.client.post('/sys.b', toMikrotik(change)))
+      // Reload
+      yield* _(self.load())
+    })
+  }
 
-    // Reload
-    return (await this.load()).map(() => undefined)
+  async loadAsync(): Promise<Sys> {
+    return Effect.runPromise(this.load())
+  }
+
+  async saveAsync(sys: Sys): Promise<void> {
+    return Effect.runPromise(this.save(sys))
   }
 
   private store(sys: Sys): SysRequest {

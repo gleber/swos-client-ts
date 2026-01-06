@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SwOSClient } from '../core/swos-client.js'
 import { http, HttpResponse, server } from './setup.js'
@@ -20,9 +21,7 @@ describe('LinkPage', () => {
       })
     )
 
-    const result = await client.links.load()
-    expect(result.isResult()).toBe(true)
-    const links = result.getResult()
+    const links = await Effect.runPromise(client.links.load())
 
     expect(links).toHaveLength(6)
     expect(links[0]).toMatchObject({
@@ -71,9 +70,7 @@ describe('LinkPage', () => {
     )
 
     // Initial Load
-    const loadResult = await client.links.load()
-    expect(loadResult.isResult()).toBe(true)
-    const links = loadResult.getResult()
+    const links = await Effect.runPromise(client.links.load())
 
     // Modify
     if (links[0]) {
@@ -81,8 +78,7 @@ describe('LinkPage', () => {
     }
 
     // Save
-    const result = await client.links.save(links)
-    expect(result.isResult()).toBe(true)
+    await Effect.runPromise(client.links.save(links))
   })
 
   it('should save links successfully', async () => {
@@ -103,18 +99,14 @@ describe('LinkPage', () => {
 
     const client = new SwOSClient('192.168.88.1', 'admin', '')
     // Load initial state
-    const loadResult = await client.links.load()
-    const links = loadResult.getResult()
+    const links = await Effect.runPromise(client.links.load())
 
     // Modify a link
     if (links[0]) {
-      links[0].enabled = true;
+      links[0].enabled = true
     }
 
-    const result = await client.links.save(links)
-
-
-    expect(result.isResult()).toBe(true)
+    await Effect.runPromise(client.links.save(links))
   })
 
   it('should handle response missing PoE fields', async () => {
@@ -140,12 +132,49 @@ describe('LinkPage', () => {
       })
     )
 
-    const result = await client.links.load()
-    expect(result.isResult()).toBe(true)
-    const links = result.getResult()
+    const links = await Effect.runPromise(client.links.load())
     expect(links.length).toBeGreaterThan(0)
     // Check missing fields are defaulted
     expect(links[0].poeMode).toBe(0) // or undefined? currently types say number
     expect(links[0].power).toBe(0)
+  })
+
+  it('should load data using async wrapper method', async () => {
+    const rawResponse =
+      '{en:"0x3f",lnk:"0x1e",dpx:"0x2e",dpxc:"0x3f",fct:"0x3f",an:"0x3f",poe:["0x0","0x0","0x0","0x0","0x0","0x0"],prio:["0x0","0x0","0x0","0x0","0x0","0x0"],poes:["0x0","0x0","0x0","0x0","0x0","0x0"],spdc:["0x0","0x0","0x0","0x0","0x0","0x0"],pwr:["0x0","0x0","0x0","0x0","0x0","0x0"],curr:["0x0","0x0","0x0","0x0","0x0","0x0"],nm:["506f7274310a","506f7274320a","506f7274330a","506f7274340a","506f7274350a","5366700a"],spd:["0x0","0x0","0x0","0x0","0x0","0x0"]}'
+
+    server.use(
+      http.get('http://192.168.1.4/link.b', () => {
+        return HttpResponse.text(rawResponse)
+      })
+    )
+
+    // Test using async method
+    const links = await client.links.loadAsync()
+    expect(links).toHaveLength(6)
+    expect(links[0].name).toBe('Port1\n')
+  })
+
+  it('should save data using async wrapper method', async () => {
+    const rawResponse =
+      '{en:"0x3f",lnk:"0x1e",dpx:"0x2e",dpxc:"0x3f",fct:"0x3f",an:"0x3f",poe:["0x0","0x0","0x0","0x0","0x0","0x0"],prio:["0x0","0x0","0x0","0x0","0x0","0x0"],poes:["0x0","0x0","0x0","0x0","0x0","0x0"],spdc:["0x0","0x0","0x0","0x0","0x0","0x0"],pwr:["0x0","0x0","0x0","0x0","0x0","0x0"],curr:["0x0","0x0","0x0","0x0","0x0","0x0"],nm:["506f7274310a","506f7274320a","506f7274330a","506f7274350a","506f7274350a","5366700a"],spd:["0x0","0x0","0x0","0x0","0x0","0x0"]}'
+
+    server.use(
+      http.get('http://192.168.1.4/link.b', () => {
+        return HttpResponse.text(rawResponse)
+      }),
+      http.post('http://192.168.1.4/link.b', async ({ request }) => {
+        const body = await request.text()
+        expect(body).toContain('en:0x3E')
+        return HttpResponse.text(rawResponse)
+      })
+    )
+
+    const links = await client.links.loadAsync()
+    if (links[0]) {
+      links[0].enabled = false
+    }
+    // Test using async method
+    await client.links.saveAsync(links)
   })
 })

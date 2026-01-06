@@ -1,4 +1,4 @@
-import { Either } from '../../types/either.js'
+import { Effect } from 'effect'
 import { SwOSError } from '../../types/error.js'
 import type { Link, PoeMode, PoeStatus, RawLinkStatus } from '../../types/link.js'
 import type { LinkRequest } from '../../types/requests.js'
@@ -19,7 +19,7 @@ import type { SwOSClient } from '../swos-client.js'
  * Endpoint: /link.b
  */
 export class LinkPage implements Page<Link[]> {
-  constructor(private client: SwOSClient) { }
+  constructor(private client: SwOSClient) {}
 
   /**
    * Loads link configuration and status.
@@ -31,59 +31,66 @@ export class LinkPage implements Page<Link[]> {
    * - dpx -> duplex (bitmask)
    * - spdc -> speedControl (array)
    */
-  async load(): Promise<Either<Link[], SwOSError>> {
-    return (await this.client.fetch('/link.b')).flatMap((response) => {
-      try {
-        const fixed = fixJson(response)
-        const raw: RawLinkStatus = JSON.parse(fixed)
-        const numPorts = raw.nm.length
+  load(): Effect.Effect<Link[], SwOSError> {
+    const self = this
+    return Effect.gen(function* (_) {
+      const response = yield* _(self.client.fetch('/link.b'))
 
-        const en = hexToBoolArray(raw.en, numPorts)
-        const an = hexToBoolArray(raw.an, numPorts)
-        const lnk = hexToBoolArray(raw.lnk, numPorts)
-        const dpx = hexToBoolArray(raw.dpx, numPorts)
-        const dpxc = hexToBoolArray(raw.dpxc, numPorts)
-        const fct = hexToBoolArray(raw.fct, numPorts)
+      return yield* _(
+        Effect.try(() => {
+          const fixed = fixJson(response)
+          const raw: RawLinkStatus = JSON.parse(fixed)
+          const numPorts = raw.nm.length
 
-        const links: Link[] = Array.from({ length: numPorts }, (_, i) => ({
-          name: hexToString(raw.nm[i]),
-          enabled: en[i],
-          linkUp: lnk[i],
-          duplex: dpx[i],
-          duplexControl: dpxc[i],
-          flowControl: fct[i],
-          autoNegotiation: an[i],
-          poeMode: raw.poe ? (parseHexInt(raw.poe[i]) as PoeMode) : 0,
-          poePrio: raw.prio ? parseHexInt(raw.prio[i]) : 0,
-          poeStatus: raw.poes ? (parseHexInt(raw.poes[i]) as PoeStatus) : 0,
-          speedControl: raw.spdc ? parseHexInt(raw.spdc[i]) : 0,
-          power: raw.pwr ? parseHexInt(raw.pwr[i]) : 0,
-          current: raw.curr ? parseHexInt(raw.curr[i]) : 0,
-        }))
+          const en = hexToBoolArray(raw.en, numPorts)
+          const an = hexToBoolArray(raw.an, numPorts)
+          const lnk = hexToBoolArray(raw.lnk, numPorts)
+          const dpx = hexToBoolArray(raw.dpx, numPorts)
+          const dpxc = hexToBoolArray(raw.dpxc, numPorts)
+          const fct = hexToBoolArray(raw.fct, numPorts)
 
-        return Either.result(links)
-      } catch (e) {
-        return Either.error(
-          new SwOSError(
-            `Link load failed: ${(e as Error).message} \nResponse: ${response || 'N/A'} `
+          return Array.from({ length: numPorts }, (_, i) => ({
+            name: hexToString(raw.nm[i]),
+            enabled: en[i],
+            linkUp: lnk[i],
+            duplex: dpx[i],
+            duplexControl: dpxc[i],
+            flowControl: fct[i],
+            autoNegotiation: an[i],
+            poeMode: raw.poe ? (parseHexInt(raw.poe[i]) as PoeMode) : 0,
+            poePrio: raw.prio ? parseHexInt(raw.prio[i]) : 0,
+            poeStatus: raw.poes ? (parseHexInt(raw.poes[i]) as PoeStatus) : 0,
+            speedControl: raw.spdc ? parseHexInt(raw.spdc[i]) : 0,
+            power: raw.pwr ? parseHexInt(raw.pwr[i]) : 0,
+            current: raw.curr ? parseHexInt(raw.curr[i]) : 0,
+          }))
+        }).pipe(
+          Effect.mapError(
+            (e) =>
+              new SwOSError(
+                `Link load failed: ${(e as Error).message} \nResponse: ${response || 'N/A'}`
+              )
           )
         )
-      }
+      )
     })
   }
 
-  async save(links: Link[]): Promise<Either<void, SwOSError>> {
-    const change = this.store(links)
-    const postResult = await this.client.post('/link.b', toMikrotik(change))
-    if (postResult.isError()) {
-      return Either.error(postResult.getError())
-    }
-    // Reload to confirm/refresh state
-    const loadResult = await this.load()
-    if (loadResult.isError()) {
-      return Either.error(loadResult.getError())
-    }
-    return Either.result(undefined)
+  save(links: Link[]): Effect.Effect<void, SwOSError> {
+    const self = this
+    return Effect.gen(function* (_) {
+      const change = self.store(links)
+      yield* _(self.client.post('/link.b', toMikrotik(change)))
+      yield* _(self.load())
+    })
+  }
+
+  async loadAsync(): Promise<Link[]> {
+    return Effect.runPromise(this.load())
+  }
+
+  async saveAsync(links: Link[]): Promise<void> {
+    return Effect.runPromise(this.save(links))
   }
 
   private store(links: Link[]): LinkRequest {
