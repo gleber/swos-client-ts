@@ -8,10 +8,13 @@ export interface Rstp {
 }
 
 export interface RawRstpStatus {
-  en: string;
+  rpc: string[];
+  cst: string[];
+  ena: string;
+  rstp: string;
+  p2p: string;
+  edge: string;
+  lrn: string;
+  fwd: string;
   role: string[];
-  sta: string[];
-  prio: string[];
-  cost: string[];
-  port: string[];
 }

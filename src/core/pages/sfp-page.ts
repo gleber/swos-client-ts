@@ -1,6 +1,6 @@
-import { SwOSClient } from '../swos-client';
-import { RawSfpStatus, SfpStatus } from '../../types/sfp';
-import { fixJson, hexToString, parseHexInt } from '../../utils/parsers';
+import { SwOSClient } from '../swos-client.js';
+import { RawSfpStatus, SfpStatus } from '../../types/sfp.js';
+import { fixJson, hexToString, parseHexInt } from '../../utils/parsers.js';
 
 export class SfpPage {
   private client: SwOSClient;
@@ -11,17 +11,22 @@ export class SfpPage {
   }
 
   async load(): Promise<void> {
-    const response = await this.client.fetch('/sfp.b');
-    const fixed = fixJson(response);
-    const raw: RawSfpStatus = JSON.parse(fixed);
-    this.sfp = {
-      vendor: hexToString(raw.vnd),
-      partNumber: hexToString(raw.pn),
-      serialNumber: hexToString(raw.sn),
-      temperature: parseHexInt(raw.temp),
-      txPower: parseHexInt(raw.tx),
-      rxPower: parseHexInt(raw.rx),
-      voltage: parseHexInt(raw.vcc),
-    };
+    let response = '';
+    try {
+      response = await this.client.fetch('/sfp.b');
+      const fixed = fixJson(response);
+      const raw: RawSfpStatus = JSON.parse(fixed);
+      this.sfp = {
+        vendor: hexToString(raw.vnd),
+        partNumber: hexToString(raw.pnr),
+        serialNumber: hexToString(raw.ser),
+        temperature: parseHexInt(raw.tmp),
+        txPower: parseHexInt(raw.tpw),
+        rxPower: parseHexInt(raw.rpw),
+        voltage: parseHexInt(raw.vcc),
+      };
+    } catch (e) {
+      throw new Error(`SFP load failed: ${(e as Error).message}\nResponse: ${response || 'N/A'}`);
+    }
   }
 }

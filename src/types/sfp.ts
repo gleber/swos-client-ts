@@ -10,10 +10,15 @@ export interface SfpStatus {
 
 export interface RawSfpStatus {
   vnd: string;
-  pn: string;
-  sn: string;
-  temp: string;
-  tx: string;
-  rx: string;
+  pnr: string;
+  rev: string;
+  ser: string;
+  dat: string;
+  typ: string;
+  wln: string;
+  tmp: string;
   vcc: string;
+  tbs: string;
+  tpw: string;
+  rpw: string;
 }

@@ -1,10 +1,10 @@
-import { DigestFetch } from 'digest-fetch';
-import { LinkPage } from './pages/link-page';
-import { SfpPage } from './pages/sfp-page';
-import { SysPage } from './pages/sys-page';
-import { VlanPage } from './pages/vlan-page';
-import { FwdPage } from './pages/fwd-page';
-import { RstpPage } from './pages/rstp-page';
+import DigestFetch from 'digest-fetch';
+import { LinkPage } from './pages/link-page.js';
+import { SfpPage } from './pages/sfp-page.js';
+import { SysPage } from './pages/sys-page.js';
+import { VlanPage } from './pages/vlan-page.js';
+import { FwdPage } from './pages/fwd-page.js';
+import { RstpPage } from './pages/rstp-page.js';
 
 export class SwOSClient {
   private client: DigestFetch;
@@ -56,10 +56,10 @@ export class SwOSClient {
     const numPorts = this.links.links.length;
     this.sys.setNumPorts(numPorts);
     this.vlan.setNumPorts(numPorts);
-    await this.sfp.load();
+    try { await this.sfp.load(); } catch (e) { console.error((e as Error).message); }
     await this.sys.load();
-    await this.vlan.load();
-    await this.fwd.load();
-    await this.rstp.load();
+    try { await this.vlan.load(); } catch (e) { console.error((e as Error).message); }
+    try { await this.fwd.load(); } catch (e) { console.error((e as Error).message); }
+    try { await this.rstp.load(); } catch (e) { console.error((e as Error).message); }
   }
 }

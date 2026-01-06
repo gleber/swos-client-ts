@@ -19,11 +19,42 @@ npm install
 npm run build
 ```
 
+## Running Without Installation
+
+After building:
+
+```bash
+node dist/index.js status <switch-ip> -u <username> -p <password>
+```
+
+For development (without building):
+
+```bash
+npm run dev -- status <switch-ip> -u <username> -p <password>
+```
+
 ## Usage
+
+### Configuration
+
+Create a `.env` file in the project root with your credentials:
+
+```env
+SWOS_USER=admin
+SWOS_PASS=yourpassword
+```
+
+Alternatively, set environment variables directly.
 
 ### Status Command
 
 Fetch and display the current status of all supported switch configurations:
+
+```bash
+swos-cli status <switch-ip>
+```
+
+Or override credentials:
 
 ```bash
 swos-cli status <switch-ip> -u <username> -p <password>
@@ -37,22 +68,164 @@ Example output (JSON):
     {
       "name": "Port1",
       "enabled": true,
+      "linkUp": false,
+      "duplex": false,
+      "duplexControl": true,
+      "flowControl": true,
+      "autoNegotiation": true,
+      "poeMode": 0,
+      "poePrio": 0,
+      "poeStatus": 0,
+      "speedControl": 0,
+      "power": 0,
+      "current": 0
+    },
+    {
+      "name": "Port2",
+      "enabled": true,
       "linkUp": true,
       "duplex": true,
-      "poeMode": 1,
-      ...
+      "duplexControl": true,
+      "flowControl": true,
+      "autoNegotiation": true,
+      "poeMode": 0,
+      "poePrio": 0,
+      "poeStatus": 0,
+      "speedControl": 0,
+      "power": 0,
+      "current": 0
+    },
+    {
+      "name": "Port3",
+      "enabled": true,
+      "linkUp": true,
+      "duplex": true,
+      "duplexControl": true,
+      "flowControl": true,
+      "autoNegotiation": true,
+      "poeMode": 0,
+      "poePrio": 0,
+      "poeStatus": 0,
+      "speedControl": 0,
+      "power": 0,
+      "current": 0
+    },
+    {
+      "name": "Port4",
+      "enabled": true,
+      "linkUp": true,
+      "duplex": true,
+      "duplexControl": true,
+      "flowControl": true,
+      "autoNegotiation": true,
+      "poeMode": 0,
+      "poePrio": 0,
+      "poeStatus": 0,
+      "speedControl": 0,
+      "power": 0,
+      "current": 0
+    },
+    {
+      "name": "Port5",
+      "enabled": true,
+      "linkUp": true,
+      "duplex": true,
+      "duplexControl": true,
+      "flowControl": true,
+      "autoNegotiation": true,
+      "poeMode": 0,
+      "poePrio": 0,
+      "poeStatus": 0,
+      "speedControl": 0,
+      "power": 0,
+      "current": 0
+    },
+    {
+      "name": "Sfp",
+      "enabled": true,
+      "linkUp": true,
+      "duplex": true,
+      "duplexControl": true,
+      "flowControl": true,
+      "autoNegotiation": true,
+      "poeMode": 0,
+      "poePrio": 0,
+      "poeStatus": 0,
+      "speedControl": 0,
+      "power": 0,
+      "current": 0
     }
   ],
   "sys": {
-    "identity": "Mikrotik",
-    "version": "2.18",
-    "ip": "192.168.88.1",
-    ...
+    "mac": "08:55:31:00:1b:19",
+    "serialNumber": "D53D0DB61E5C",
+    "identity": "office-router",
+    "version": "2.13",
+    "boardName": "CSS106-5G-1S",
+    "rootBridgeMac": "08:55:31:00:1b:19",
+    "uptime": 93751318,
+    "ip": "192.168.1.4",
+    "build": 1619425265,
+    "dsc": 1,
+    "wdt": 1,
+    "mikrotikDiscoveryProtocol": [false, false, false, false, false, false],
+    "independentVlanLookup": false,
+    "allowFrom": "0.0.0.0",
+    "allm": 0,
+    "allowFromPorts": [true, true, true, true, true, true],
+    "allowFromVlan": 0,
+    "igmpSnooping": false,
+    "igmpQuerier": true,
+    "longPoeCable": false,
+    "igmpFastLeave": [false, false, false, false, false, false],
+    "igmpVersion": 2,
+    "voltage": 0,
+    "temperature": 0,
+    "bridgePriority": 32768,
+    "portCostMode": 0,
+    "forwardReservedMulticast": true,
+    "addressAcquisition": 0,
+    "staticIpAddress": "192.168.1.216"
   },
-  "vlan": [...],
-  "fwd": {...},
-  "rstp": {...},
-  "sfp": {...}
+  "vlan": [
+    {
+      "id": 1,
+      "independentVlanLookup": false,
+      "igmpSnooping": false,
+      "portMode": [0, 0, 0, 0, 0, 0]
+    }
+  ],
+  "fwd": {
+    "enabled": [true, true, true, true, true, true],
+    "linkUp": [false, true, true, true, true, true],
+    "flowControl": [true, true, true, true, true, true],
+    "mirror": 0,
+    "defaultVlanId": [1, 1, 1, 1, 1, 1],
+    "vlanId": [1, 1, 1, 1, 1, 1],
+    "vlanMode": [0, 0, 0, 0, 0, 0],
+    "locked": [false, false, false, false, false, false],
+    "rateLimit": [0, 0, 0, 0, 0, 0],
+    "broadcastLimit": [0, 0, 0, 0, 0, 0],
+    "multicastLimit": [0, 0, 0, 0, 0, 0],
+    "unicastLimit": [0, 0, 0, 0, 0, 0]
+  },
+  "rstp": {
+    "enabled": true,
+    "role": [1, 2, 2, 2, 2, 2],
+    "status": [3, 3, 3, 3, 3, 3],
+    "priority": [128, 128, 128, 128, 128, 128],
+    "cost": [4, 4, 4, 4, 4, 4],
+    "portId": [1, 2, 3, 4, 5, 6]
+  },
+  "sfp": {
+    "vendor": "Mikrotik",
+    "partNumber": "SFP-1G-SX",
+    "serialNumber": "MT12345678",
+    "temperature": 25,
+    "txPower": -5,
+    "rxPower": -10,
+    "voltage": 3.3
+  }
 }
 ```
 
@@ -69,20 +242,20 @@ SwOS does not provide a standard REST API. Instead, this tool mimics browser beh
 
 ### Supported Pages
 
-| Page in UI  | Endpoint    | Status      | Description |
-|-------------|-------------|-------------|-------------|
-| Link        | /link.b     | Implemented | Port status, speeds, PoE |
-| System      | /sys.b      | Implemented | System settings, IP, identity |
-| SFP         | /sfp.b      | Implemented | SFP module info |
-| RSTP        | /rstp.b     | Implemented | STP settings |
-| Forwarding  | /fwd.b      | Implemented | VLAN modes, locking, limits |
-| VLANs       | /vlan.b     | Implemented | VLAN definitions |
-| Hosts       | /host.b     | Missing     | Host table |
-| IGMP Groups | /igmp.b     | Missing     | IGMP snooping |
-| SNMP        | /snmp.b     | Missing     | SNMP config |
-| ACL         | /acl.b      | Missing     | Access lists |
-| Statistics  | /stats.b    | Missing     | Traffic stats |
-| Errors      | /stats.b    | Missing     | Error counters |
+| Page in UI  | Endpoint | Status      | Description                   |
+| ----------- | -------- | ----------- | ----------------------------- |
+| Link        | /link.b  | Implemented | Port status, speeds, PoE      |
+| System      | /sys.b   | Implemented | System settings, IP, identity |
+| SFP         | /sfp.b   | Implemented | SFP module info               |
+| RSTP        | /rstp.b  | Implemented | STP settings                  |
+| Forwarding  | /fwd.b   | Implemented | VLAN modes, locking, limits   |
+| VLANs       | /vlan.b  | Implemented | VLAN definitions              |
+| Hosts       | /host.b  | Missing     | Host table                    |
+| IGMP Groups | /igmp.b  | Missing     | IGMP snooping                 |
+| SNMP        | /snmp.b  | Missing     | SNMP config                   |
+| ACL         | /acl.b   | Missing     | Access lists                  |
+| Statistics  | /stats.b | Missing     | Traffic stats                 |
+| Errors      | /stats.b | Missing     | Error counters                |
 
 Status:
 - *Missing*: Not implemented

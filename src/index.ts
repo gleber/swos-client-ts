@@ -1,5 +1,6 @@
+import 'dotenv/config';
 import { Command } from 'commander';
-import { SwOSClient } from './core/swos-client';
+import { SwOSClient } from './core/swos-client.js';
 
 const program = new Command();
 
@@ -11,8 +12,8 @@ program
 program
   .command('status')
   .argument('<ip>', 'Switch IP address')
-  .option('-u, --user <name>', 'Username', 'admin')
-  .option('-p, --pass <password>', 'Password')
+  .option('-u, --user <name>', 'Username', process.env.SWOS_USER || 'admin')
+  .option('-p, --pass <password>', 'Password', process.env.SWOS_PASS)
   .action(async (ip, options) => {
     const client = new SwOSClient(ip, options.user, options.pass);
     try {

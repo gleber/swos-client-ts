@@ -1,6 +1,7 @@
 declare module 'digest-fetch' {
-  export class DigestFetch {
+  class DigestFetch {
     constructor(username: string, password: string);
     fetch(url: string | Request, options?: RequestInit): Promise<Response>;
   }
+  export = DigestFetch;
 }

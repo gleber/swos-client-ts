@@ -1,6 +1,15 @@
 export function fixJson(json: string): string {
+  // Replace quotes
+  json = json.replace(/[`']/g, '"');
+  // Remove spaces after :
+  json = json.replace(/:\s+/g, ':');
   // Replace unquoted keys with quoted
   json = json.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+  // Quote hex values
+  json = json.replace(/:(\s*)(0x[0-9a-fA-F]+)/g, ':$1"$2"');
+  json = json.replace(/(0x[0-9a-fA-F]+)(?=[,\]\}])/g, '"$1"');
+  // Quote other unquoted values
+  json = json.replace(/:(\s*)([^",\[\]{}\s]*)(?=[,\]\}])/g, ':$1"$2"');
   // Replace single quotes with double quotes
   json = json.replace(/'/g, '"');
   return json;
@@ -26,6 +35,7 @@ export function boolArrayToHex(arr: boolean[]): string {
 }
 
 export function hexToString(hex: string): string {
+  if (!hex || hex === '') return '';
   const bytes = hex.match(/.{1,2}/g)?.map(b => parseInt(b, 16)) || [];
   return Buffer.from(bytes).toString('utf8');
 }

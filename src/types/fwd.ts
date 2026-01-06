@@ -14,16 +14,24 @@ export interface Fwd {
 }
 
 export interface RawFwdStatus {
-  en: string;
-  lnk: string;
-  fct: string;
-  mir: string;
-  pvid: string[];
-  vid: string[];
-  vmde: string[];
-  lock: string[];
-  rate: string[];
-  bcst: string[];
-  mcst: string[];
-  ucst: string[];
+  ir: string[];
+  or: string[];
+  fp1: string;
+  fp2: string;
+  fp3: string;
+  fp4: string;
+  fp5: string;
+  fp6: string;
+  lck: string;
+  lckf: string;
+  imr: string;
+  omr: string;
+  mrto: string;
+  vlan: string[];
+  vlnh: string[];
+  vlni: string[];
+  fvid: string;
+  dvid: string[];
+  srt: string[];
+  suni: string;
 }

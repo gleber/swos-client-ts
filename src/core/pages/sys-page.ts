@@ -1,6 +1,6 @@
-import { SwOSClient } from '../swos-client';
-import { RawSysStatus, Sys } from '../../types/sys';
-import { fixJson, hexToBoolArray, hexToString, parseHexInt, hexToMac, intToIp, toMikrotik, stringToHex, ipToInt, boolArrayToHex } from '../../utils/parsers';
+import { SwOSClient } from '../swos-client.js';
+import { RawSysStatus, Sys } from '../../types/sys.js';
+import { fixJson, hexToBoolArray, hexToString, parseHexInt, hexToMac, intToIp, toMikrotik, stringToHex, ipToInt, boolArrayToHex } from '../../utils/parsers.js';
 
 export class SysPage {
   private client: SwOSClient;
