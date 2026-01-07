@@ -303,27 +303,27 @@ export function fromVlanPortMode(mode: VlanPortMode): number {
 // ===== New Enum Converters (from mikrotik-fields.ts) =====
 
 import {
-  type AddressAcquisition,
+  AddressAcquisition,
   CablePairStatus,
-  type ComboMode,
+  ComboMode,
   DuplexMode,
   FlowControl,
-  type LACPMode,
+  LACPMode,
   LastHopStatus,
   LinkStatus,
   PSUStatus,
-  type PoEOutMode,
+  PoEOutMode,
   PoEOutStatus,
-  type PortCostMode,
-  type QSFPType,
+  PortCostMode,
+  QSFPType,
   RstpMode,
   RstpPortType,
-  type RstpRole,
-  type RstpState,
-  type SpeedControl,
-  type VLANMode,
-  type VLANReceive,
-  type VLANTagMatch,
+  RstpRole,
+  RstpState,
+  SpeedControl,
+  VLANMode,
+  VLANReceive,
+  VLANTagMatch,
 } from '../types/mikrotik-fields.js'
 
 /**
@@ -387,22 +387,22 @@ export function fromRstpMode(mode: RstpMode): number {
  */
 export function toRstpRole(value: number): RstpRole {
   const map: Record<number, RstpRole> = {
-    0: 'disabled',
-    1: 'alternate',
-    2: 'root',
-    3: 'designated',
-    4: 'backup',
+    0: RstpRole.Disabled,
+    1: RstpRole.Alternate,
+    2: RstpRole.Root,
+    3: RstpRole.Designated,
+    4: RstpRole.Backup,
   }
-  return map[value] ?? 'disabled'
+  return map[value] ?? RstpRole.Disabled
 }
 
 export function fromRstpRole(role: RstpRole): number {
   const map: Record<RstpRole, number> = {
-    disabled: 0,
-    alternate: 1,
-    root: 2,
-    designated: 3,
-    backup: 4,
+    [RstpRole.Disabled]: 0,
+    [RstpRole.Alternate]: 1,
+    [RstpRole.Root]: 2,
+    [RstpRole.Designated]: 3,
+    [RstpRole.Backup]: 4,
   }
   return map[role]
 }
@@ -429,19 +429,19 @@ export function fromRstpPortType(portType: RstpPortType): number {
  */
 export function toRstpState(value: number): RstpState {
   const map: Record<number, RstpState> = {
-    0: 'discarding',
-    1: 'learning',
-    2: 'forwarding',
-    3: 'forwarding',
+    0: RstpState.Discarding,
+    1: RstpState.Learning,
+    2: RstpState.Forwarding,
+    3: RstpState.Forwarding,
   }
-  return map[value] ?? 'discarding'
+  return map[value] ?? RstpState.Discarding
 }
 
 export function fromRstpState(state: RstpState): number {
   const map: Record<RstpState, number> = {
-    discarding: 0,
-    learning: 1,
-    forwarding: 2, // Defaulting to 2 for forwarding
+    [RstpState.Discarding]: 0,
+    [RstpState.Learning]: 1,
+    [RstpState.Forwarding]: 2, // Defaulting to 2 for forwarding
   }
   return map[state]
 }
@@ -483,64 +483,64 @@ export function fromPSUStatus(status: PSUStatus): number {
  * Converts SwOS numeric combo mode value to string type.
  */
 export function toComboMode(value: number): ComboMode {
-  const modes: ComboMode[] = ['auto', 'copper', 'sfp']
-  return modes[value] ?? 'auto'
+  const modes: ComboMode[] = [ComboMode.Auto, ComboMode.Copper, ComboMode.SFP]
+  return modes[value] ?? ComboMode.Auto
 }
 
 /**
  * Converts SwOS numeric QSFP type value to string type.
  */
 export function toQSFPType(value: number): QSFPType {
-  const types: QSFPType[] = ['auto', '40G', '4x10G']
-  return types[value] ?? 'auto'
+  const types: QSFPType[] = [QSFPType.Auto, QSFPType.Speed40G, QSFPType.Speed4x10G]
+  return types[value] ?? QSFPType.Auto
 }
 
 /**
  * Converts SwOS numeric LACP mode value to string type.
  */
 export function toLACPMode(value: number): LACPMode {
-  const modes: LACPMode[] = ['passive', 'active', 'static']
-  return modes[value] ?? 'passive'
+  const modes: LACPMode[] = [LACPMode.Passive, LACPMode.Active, LACPMode.Static]
+  return modes[value] ?? LACPMode.Passive
 }
 
 /**
  * Converts SwOS numeric address acquisition value to string type.
  */
 export function toAddressAcquisition(value: number): AddressAcquisition {
-  const modes: AddressAcquisition[] = ['DHCP with fallback', 'static', 'DHCP only']
-  return modes[value] ?? 'DHCP with fallback'
+  const modes: AddressAcquisition[] = [AddressAcquisition.DHCPWithFallback, AddressAcquisition.Static, AddressAcquisition.DHCPOnly]
+  return modes[value] ?? AddressAcquisition.DHCPWithFallback
 }
 
 /**
  * Converts SwOS numeric PoE out mode value to string type.
  */
 export function toPoEOutMode(value: number): PoEOutMode {
-  const modes: PoEOutMode[] = ['auto on', 'force on', 'off']
-  return modes[value] ?? 'auto on'
+  const modes: PoEOutMode[] = [PoEOutMode.AutoOn, PoEOutMode.ForceOn, PoEOutMode.Off]
+  return modes[value] ?? PoEOutMode.AutoOn
 }
 
 /**
  * Converts SwOS numeric VLAN mode value to string type.
  */
 export function toVLANMode(value: number): VLANMode {
-  const modes: VLANMode[] = ['disabled', 'optional', 'enabled', 'strict']
-  return modes[value] ?? 'disabled'
+  const modes: VLANMode[] = [VLANMode.Disabled, VLANMode.Optional, VLANMode.Enabled, VLANMode.Strict]
+  return modes[value] ?? VLANMode.Disabled
 }
 
 /**
  * Converts SwOS numeric VLAN receive value to string type.
  */
 export function toVLANReceive(value: number): VLANReceive {
-  const modes: VLANReceive[] = ['any', 'only tagged', 'only untagged']
-  return modes[value] ?? 'any'
+  const modes: VLANReceive[] = [VLANReceive.Any, VLANReceive.OnlyTagged, VLANReceive.OnlyUntagged]
+  return modes[value] ?? VLANReceive.Any
 }
 
 /**
  * Converts SwOS numeric VLAN tag match value to string type.
  */
 export function toVLANTagMatch(value: number): VLANTagMatch {
-  const modes: VLANTagMatch[] = ['any', 'present', 'not present']
-  return modes[value] ?? 'any'
+  const modes: VLANTagMatch[] = [VLANTagMatch.Any, VLANTagMatch.Present, VLANTagMatch.NotPresent]
+  return modes[value] ?? VLANTagMatch.Any
 }
 
 /**
@@ -572,16 +572,16 @@ export function toCablePairStatus(value: number): CablePairStatus {
  * Converts SwOS numeric speed control value to string type.
  */
 export function toSpeedControl(value: number): SpeedControl {
-  const modes: SpeedControl[] = ['10M', '100M', '1G']
-  return modes[value] ?? '1G'
+  const modes: SpeedControl[] = [SpeedControl.Speed10M, SpeedControl.Speed100M, SpeedControl.Speed1G]
+  return modes[value] ?? SpeedControl.Speed1G
 }
 
 /**
  * Converts SwOS numeric port cost mode value to string type.
  */
 export function toPortCostMode(value: number): PortCostMode {
-  const modes: PortCostMode[] = ['short', 'long']
-  return modes[value] ?? 'short'
+  const modes: PortCostMode[] = [PortCostMode.Short, PortCostMode.Long]
+  return modes[value] ?? PortCostMode.Short
 }
 
 // ===== Branded Type Constructors =====

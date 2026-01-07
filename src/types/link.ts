@@ -1,4 +1,4 @@
-import type { DuplexMode, FlowControl, LinkStatus as LinkStatusEnum } from './mikrotik-fields.js'
+import type { CablePairStatus, ComboMode, DuplexMode, FlowControl, LastHopStatus, LinkStatus as LinkStatusEnum, QSFPType } from './mikrotik-fields.js'
 
 export enum PoeMode {
   Off = 'off',
@@ -36,6 +36,18 @@ export interface Link {
   speedControl: number
   power: number
   current: number
+
+  // New fields
+  blockOnNoPower?: boolean // blkp
+  comboMode?: ComboMode // cm
+  qsfpType?: QSFPType // qtyp
+  totalFlowControl?: FlowControl // tfct
+  cableTest?: {
+    lastHop?: LastHopStatus // hops
+    length?: number // len (meters)
+    faultAt?: number // flt (meters)
+    pairStatus?: CablePairStatus // pair
+  }
 }
 
 export interface LinkStatus {
@@ -61,7 +73,7 @@ export interface RawLinkStatus {
   blkp?: string // Block On No Power
   cm?: string // Combo Mode
   qtyp?: string // QSFP Type
-  tfct?: string // Flow Control (Total?)
+  tfct?: string[] // Flow Control (Total?)
   fctc?: string // Flow Control Tx?
   fctr?: string // Flow Control Rx?
   hop?: string[] // Hops

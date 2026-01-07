@@ -5,6 +5,7 @@ import type { RawVlanStatus, Vlan } from '../../types/vlan.js'
 import {
   fixJson,
   fromVlanPortMode,
+  hexToString,
   parseHexInt,
   toMikrotik,
   toVlanPortMode,
@@ -19,7 +20,7 @@ import type { SwOSClient } from '../swos-client.js'
 export class VlanPage implements Page<Vlan[]> {
   private numPorts = 0
 
-  constructor(private client: SwOSClient) {}
+  constructor(private client: SwOSClient) { }
 
   setNumPorts(numPorts: number) {
     this.numPorts = numPorts
@@ -45,9 +46,15 @@ export class VlanPage implements Page<Vlan[]> {
 
           return raw.map((r) => ({
             id: parseHexInt(r.vid),
+            name: r.nm ? hexToString(r.nm) : undefined,
+            portIsolation: r.piso ? parseHexInt(r.piso) !== 0 : undefined,
+            learning: r.lrn ? parseHexInt(r.lrn) !== 0 : undefined,
+            mirror: r.mrr ? parseHexInt(r.mrr) !== 0 : undefined,
+            members: r.mbr || '0', // Raw hex string for members bitmask
+
             independentVlanLookup: parseHexInt(r.ivl) !== 0,
             igmpSnooping: parseHexInt(r.igmp) !== 0,
-            portMode: r.prt.map((p) => toVlanPortMode(parseHexInt(p))),
+            portMode: r.prt ? r.prt.map((p) => toVlanPortMode(parseHexInt(p))) : [],
           }))
         }).pipe(
           Effect.mapError(

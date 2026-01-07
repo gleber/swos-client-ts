@@ -59,6 +59,7 @@ describe('VlanPage', () => {
         VlanPortMode.LeaveAsIs,
         VlanPortMode.LeaveAsIs,
       ],
+      members: '0',
     })
 
     // Check if new vlan has default props

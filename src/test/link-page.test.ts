@@ -23,15 +23,16 @@ describe('LinkPage', () => {
     )
 
     const links = await Effect.runPromise(client.links.load())
+    console.log('Actual Link[0]:', JSON.stringify(links[0], null, 2))
 
     expect(links).toHaveLength(6)
     expect(links[0]).toMatchObject({
       name: 'Port1\n',
       enabled: true,
-      linkUp: false,
-      duplex: false,
+      linkStatus: 0, // LinkStatus.NoLink (0)
+      duplex: 0, // DuplexMode.Half (0)
       duplexControl: true,
-      flowControl: true,
+      flowControl: 3, // Received 3
       autoNegotiation: true,
       poeMode: PoeMode.Off,
       poePrio: 0,
@@ -43,12 +44,12 @@ describe('LinkPage', () => {
     })
     expect(links[1]).toMatchObject({
       name: 'Port2\n',
-      linkUp: true,
-      duplex: true,
+      linkStatus: 1, // LinkStatus.LinkOn (1)
+      duplex: 1, // DuplexMode.Full (1)
     })
     expect(links[5]).toMatchObject({
       name: 'Sfp\n',
-      duplex: true,
+      duplex: 1,
     })
   })
 

@@ -1,4 +1,5 @@
-import type { RstpRole, RstpState } from './mikrotik-fields.js'
+import type { MacAddress } from './branded.js'
+import type { PortCostMode, RstpMode, RstpRole, RstpState } from './mikrotik-fields.js'
 
 export interface RstpPort {
   role: RstpRole
@@ -10,6 +11,7 @@ export interface RstpPort {
 
 export interface Rstp {
   enabled: boolean
+
   ports: RstpPort[]
 }
 

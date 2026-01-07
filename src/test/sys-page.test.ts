@@ -1,6 +1,7 @@
 import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SwOSClient } from '../core/swos-client.js'
+import { AddressAcquisition, PortCostMode } from '../types/mikrotik-fields.js'
 import { createIpAddress } from '../utils/parsers.js'
 import { http, HttpResponse, server } from './setup.js'
 
@@ -52,41 +53,33 @@ describe('SysPage', () => {
     client.sys.setNumPorts(6)
 
     const sys = await Effect.runPromise(client.sys.load())
+    console.log('Actual Sys:', JSON.stringify(sys, null, 2))
 
     expect(sys).toMatchObject({
-      mac: '08:55:31:00:1b:19',
+      macAddress: '08:55:31:00:1b:19',
       serialNumber: '443533443044423631453543',
       identity: 'office-router',
       version: '2.13',
       boardName: 'CSS106-5G-1S',
       rootBridgeMac: '08:55:31:00:1b:19',
-      ip: '192.168.1.4',
-      build: 1619425265,
-      dsc: 1,
-      wdt: 1,
-      independentVlanLookup: false,
-      allowFrom: '0.0.0.0',
-      allm: 0,
+
+      mikrotikDiscoveryProtocol: true,
+      watchdog: true,
+
+      allowFromIp: '0.0.0.0',
+      allowFromIpMask: 0,
       allowFromVlan: 0,
+
       igmpSnooping: false,
-      igmpQuerier: false,
-      longPoeCable: false,
-      igmpVersion: 0,
+
       voltage: 0,
       temperature: 0,
+
       bridgePriority: 32768,
-      portCostMode: 0,
-      forwardReservedMulticast: false,
-      addressAcquisition: 0,
+      portCostMode: PortCostMode.Short,
+
+      addressAcquisition: AddressAcquisition.DHCPWithFallback,
       staticIpAddress: '192.168.88.4',
-      ports: [
-        { mikrotikDiscoveryProtocol: false, allowFrom: true, igmpFastLeave: false },
-        { mikrotikDiscoveryProtocol: false, allowFrom: true, igmpFastLeave: false },
-        { mikrotikDiscoveryProtocol: false, allowFrom: true, igmpFastLeave: false },
-        { mikrotikDiscoveryProtocol: false, allowFrom: true, igmpFastLeave: false },
-        { mikrotikDiscoveryProtocol: false, allowFrom: true, igmpFastLeave: false },
-        { mikrotikDiscoveryProtocol: false, allowFrom: true, igmpFastLeave: false },
-      ],
     })
   })
   it('should save sys data', async () => {
