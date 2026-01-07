@@ -18,10 +18,10 @@ import {
   stringToHex,
   toAddressAcquisition,
   toMikrotik,
+  toPSUStatus,
   toPoEOutMode,
   toPoEOutStatus,
   toPortCostMode,
-  toPSUStatus,
 } from '../../utils/parsers.js'
 import type { Page } from '../page.interface.js'
 import type { SwOSClient } from '../swos-client.js'
@@ -33,7 +33,7 @@ import type { SwOSClient } from '../swos-client.js'
 export class SysPage implements Page<Sys> {
   private numPorts = 0
 
-  constructor(private client: SwOSClient) { }
+  constructor(private client: SwOSClient) {}
 
   setNumPorts(numPorts: number) {
     this.numPorts = numPorts
@@ -123,7 +123,7 @@ export class SysPage implements Page<Sys> {
             // Let's try to handle `poes` as potentially array or string.
             // But strict types say string.
             // If it's a string, maybe it's a list like "0,1,0..." or hex?
-            // Given lack of concrete example for `poes`, but strict typing in `RawVlanStatus` etc, 
+            // Given lack of concrete example for `poes`, but strict typing in `RawVlanStatus` etc,
             // let's assume it might be missing or complex.
             // HOWEVER, looking at `mikrotik-dump.js` line 1362: `{ n: 'PoE Out Status', id: 'poes', a: 1 ... }`
             // `a: 1` strongly suggests array.
@@ -151,7 +151,7 @@ export class SysPage implements Page<Sys> {
               raw.fan2 ? parseHexInt(raw.fan2) : 0,
               raw.fan3 ? parseHexInt(raw.fan3) : 0,
               raw.fan4 ? parseHexInt(raw.fan4) : 0,
-            ].filter(rpm => rpm > 0), // meaningful fans
+            ].filter((rpm) => rpm > 0), // meaningful fans
 
             psu: [
               {
@@ -163,7 +163,7 @@ export class SysPage implements Page<Sys> {
                 current: raw.p2c ? parseHexInt(raw.p2c) : undefined,
                 voltage: raw.p2v ? parseHexInt(raw.p2v) / 100 : undefined,
                 status: raw.p2s ? toPSUStatus(parseHexInt(raw.p2s)) : undefined,
-              }
+              },
             ],
 
             ports,

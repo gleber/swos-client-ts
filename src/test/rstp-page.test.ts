@@ -25,12 +25,30 @@ describe('RstpPage', () => {
     expect(rstp).toMatchObject({
       enabled: true,
       ports: [
-        { role: RstpRole.Designated, status: RstpState.Discarding, priority: 0, cost: 0, portId: 0 },
+        {
+          role: RstpRole.Designated,
+          status: RstpState.Discarding,
+          priority: 0,
+          cost: 0,
+          portId: 0,
+        },
         { role: RstpRole.Designated, status: RstpState.Learning, priority: 0, cost: 4, portId: 0 },
         { role: RstpRole.Designated, status: RstpState.Learning, priority: 0, cost: 4, portId: 0 },
         { role: RstpRole.Designated, status: RstpState.Learning, priority: 0, cost: 4, portId: 0 },
-        { role: RstpRole.Designated, status: RstpState.Discarding, priority: 0, cost: 0, portId: 0 },
-        { role: RstpRole.Designated, status: RstpState.Discarding, priority: 0, cost: 0, portId: 0 },
+        {
+          role: RstpRole.Designated,
+          status: RstpState.Discarding,
+          priority: 0,
+          cost: 0,
+          portId: 0,
+        },
+        {
+          role: RstpRole.Designated,
+          status: RstpState.Discarding,
+          priority: 0,
+          cost: 0,
+          portId: 0,
+        },
       ],
     })
   })

@@ -1,6 +1,7 @@
 import DigestFetch from 'digest-fetch'
 import { Effect } from 'effect'
 import type { AclRule } from '../types/acl.js'
+import type { SwOSAggregatedState } from '../types/aggregated.js'
 import { SwOSError } from '../types/error.js'
 import type { Fwd } from '../types/fwd.js'
 import type { RawHostStatus } from '../types/host.js'
@@ -26,6 +27,7 @@ import { SnmpPage } from './pages/snmp-page.js'
 import { StatsPage } from './pages/stats-page.js'
 import { SysPage } from './pages/sys-page.js'
 import { VlanPage } from './pages/vlan-page.js'
+import { aggregateSwOSData } from './swos-aggregator.js'
 
 export interface SwOSData {
   links: Link[]
@@ -202,6 +204,18 @@ export class SwOSClient {
     })
   }
 
+  /**
+   * Retrieves specific port information and full system state in an aggregated format.
+   * This is a higher-level API that queries the device and reorganizes the data.
+   */
+  getAggregatedState(): Effect.Effect<SwOSAggregatedState, SwOSError> {
+    const self = this
+    return Effect.gen(function* (_) {
+      const data = yield* _(self.fetchAll())
+      return aggregateSwOSData(data)
+    })
+  }
+
   async fetchAsync(endpoint: string): Promise<string> {
     return Effect.runPromise(this.fetch(endpoint))
   }
@@ -216,5 +230,9 @@ export class SwOSClient {
 
   async saveAsync(data: SwOSData): Promise<void> {
     return Effect.runPromise(this.save(data))
+  }
+
+  async getAggregatedStateAsync(): Promise<SwOSAggregatedState> {
+    return Effect.runPromise(this.getAggregatedState())
   }
 }

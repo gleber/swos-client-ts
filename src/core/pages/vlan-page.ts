@@ -20,7 +20,7 @@ import type { SwOSClient } from '../swos-client.js'
 export class VlanPage implements Page<Vlan[]> {
   private numPorts = 0
 
-  constructor(private client: SwOSClient) { }
+  constructor(private client: SwOSClient) {}
 
   setNumPorts(numPorts: number) {
     this.numPorts = numPorts

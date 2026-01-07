@@ -1,4 +1,12 @@
-import type { CablePairStatus, ComboMode, DuplexMode, FlowControl, LastHopStatus, LinkStatus as LinkStatusEnum, QSFPType } from './mikrotik-fields.js'
+import type {
+  CablePairStatus,
+  ComboMode,
+  DuplexMode,
+  FlowControl,
+  LastHopStatus,
+  LinkStatus as LinkStatusEnum,
+  QSFPType,
+} from './mikrotik-fields.js'
 
 export enum PoeMode {
   Off = 'off',

@@ -1,6 +1,6 @@
 import type { IpAddress, MacAddress } from './branded.js'
 
-import type { AddressAcquisition, PoEOutMode, PoEOutStatus, PSUStatus } from './mikrotik-fields.js'
+import type { AddressAcquisition, PSUStatus, PoEOutMode, PoEOutStatus } from './mikrotik-fields.js'
 
 export interface SysPort {
   mikrotikDiscoveryProtocol: boolean

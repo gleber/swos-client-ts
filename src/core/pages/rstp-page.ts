@@ -1,16 +1,10 @@
 import { Effect } from 'effect'
 import { SwOSError } from '../../types/error.js'
+import type { RstpRequest } from '../../types/requests.js'
 import type { RawRstpStatus, Rstp, RstpPort } from '../../types/rstp.js'
-import {
-  fixJson,
-  parseHexInt,
-  toMikrotik,
-  toRstpRole,
-  toRstpState,
-} from '../../utils/parsers.js'
+import { fixJson, parseHexInt, toMikrotik, toRstpRole, toRstpState } from '../../utils/parsers.js'
 import type { Page } from '../page.interface.js'
 import type { SwOSClient } from '../swos-client.js'
-import { RstpRequest } from '../../types/requests.js'
 
 /**
  * Handles the 'RSTP' (Rapid Spanning Tree Protocol) tab of SwOS.
@@ -19,7 +13,7 @@ import { RstpRequest } from '../../types/requests.js'
 export class RstpPage implements Page<Rstp> {
   private numPorts = 0
 
-  constructor(private client: SwOSClient) { }
+  constructor(private client: SwOSClient) {}
 
   /**
    * Loads RSTP configuration and status.

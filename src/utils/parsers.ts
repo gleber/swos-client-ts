@@ -507,7 +507,11 @@ export function toLACPMode(value: number): LACPMode {
  * Converts SwOS numeric address acquisition value to string type.
  */
 export function toAddressAcquisition(value: number): AddressAcquisition {
-  const modes: AddressAcquisition[] = [AddressAcquisition.DHCPWithFallback, AddressAcquisition.Static, AddressAcquisition.DHCPOnly]
+  const modes: AddressAcquisition[] = [
+    AddressAcquisition.DHCPWithFallback,
+    AddressAcquisition.Static,
+    AddressAcquisition.DHCPOnly,
+  ]
   return modes[value] ?? AddressAcquisition.DHCPWithFallback
 }
 
@@ -523,7 +527,12 @@ export function toPoEOutMode(value: number): PoEOutMode {
  * Converts SwOS numeric VLAN mode value to string type.
  */
 export function toVLANMode(value: number): VLANMode {
-  const modes: VLANMode[] = [VLANMode.Disabled, VLANMode.Optional, VLANMode.Enabled, VLANMode.Strict]
+  const modes: VLANMode[] = [
+    VLANMode.Disabled,
+    VLANMode.Optional,
+    VLANMode.Enabled,
+    VLANMode.Strict,
+  ]
   return modes[value] ?? VLANMode.Disabled
 }
 
@@ -572,7 +581,11 @@ export function toCablePairStatus(value: number): CablePairStatus {
  * Converts SwOS numeric speed control value to string type.
  */
 export function toSpeedControl(value: number): SpeedControl {
-  const modes: SpeedControl[] = [SpeedControl.Speed10M, SpeedControl.Speed100M, SpeedControl.Speed1G]
+  const modes: SpeedControl[] = [
+    SpeedControl.Speed10M,
+    SpeedControl.Speed100M,
+    SpeedControl.Speed1G,
+  ]
   return modes[value] ?? SpeedControl.Speed1G
 }
 

@@ -31,7 +31,6 @@ export interface RawVlanStatus {
   ivl: string
   igmp: string
 
-
   nm?: string
   piso?: string
   lrn?: string

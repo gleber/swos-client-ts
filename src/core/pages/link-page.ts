@@ -30,7 +30,7 @@ import type { SwOSClient } from '../swos-client.js'
  * Endpoint: /link.b
  */
 export class LinkPage implements Page<Link[]> {
-  constructor(private client: SwOSClient) { }
+  constructor(private client: SwOSClient) {}
 
   /**
    * Loads link configuration and status.
@@ -124,7 +124,7 @@ export class LinkPage implements Page<Link[]> {
               length: raw.len ? parseHexInt(raw.len[i]) : undefined,
               faultAt: raw.flt ? parseHexInt(raw.flt[i]) : undefined,
               pairStatus: raw.pair ? toCablePairStatus(parseHexInt(raw.pair[i])) : undefined,
-            }
+            },
           }))
         }).pipe(
           Effect.mapError(
