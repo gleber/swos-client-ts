@@ -1,10 +1,11 @@
 # SwOS CLI
 
-Note: This is a reimplementation of https://github.com/finomen/swos-client using AI. Code has been verified against SwOS 2.13 running on CSS106-5G-1S and CSS326-24G-2S+, but has not been thoroughly reviewed.
-
-A TypeScript CLI tool to interact with Mikrotik managed switches running SwOS. This tool allows reading switch configurations programmatically, outputting data in JSON format.
+A TypeScript library and CLI tool to interact with Mikrotik managed switches running SwOS. The CLI allows reading switch configurations programmatically, outputting data in JSON format. The library has logic to save the configuration back to the switch.
 
 There is no official documentation for the SwOS API, so compatibility may vary across versions or hardware.
+
+> [!IMPORTANT]
+> This is a reimplementation of https://github.com/finomen/swos-client using AI. Code has been verified against SwOS 2.13 running on CSS106-5G-1S and CSS326-24G-2S+, but has not been thoroughly reviewed. Saving configuration has not been tested at all.
 
 ## Installation
 
