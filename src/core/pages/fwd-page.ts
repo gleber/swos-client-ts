@@ -44,14 +44,19 @@ export class FwdPage {
             ports: [],
           }
 
-          const enabled = [
-            parseHexInt(raw.fp1) !== 0,
-            parseHexInt(raw.fp2) !== 0,
-            parseHexInt(raw.fp3) !== 0,
-            parseHexInt(raw.fp4) !== 0,
-            parseHexInt(raw.fp5) !== 0,
-            parseHexInt(raw.fp6) !== 0,
-          ]
+          // Dynamically extract all fp fields (fp1, fp2, ..., fpN)
+          const fpFields: number[] = []
+          for (let i = 1; i <= self.numPorts; i++) {
+            const fpKey = `fp${i}` as keyof RawFwdStatus
+            const fpValue = raw[fpKey]
+            if (fpValue !== undefined && typeof fpValue === 'string') {
+              fpFields.push(parseHexInt(fpValue))
+            } else {
+              fpFields.push(0)
+            }
+          }
+
+          const enabled = fpFields.map((fp) => fp !== 0)
 
           const defaultVlanIds = raw.vlan.map((x) => parseHexInt(x))
           const vlanIds = raw.dvid.map((x) => parseHexInt(x))
@@ -172,13 +177,8 @@ export class FwdPage {
     const vlni = fwd.ports.map((p) => p.vlanMode)
     const or = fwd.ports.map((p) => p.rateLimit)
 
-    return {
-      fp1: fp[0] || 0,
-      fp2: fp[1] || 0,
-      fp3: fp[2] || 0,
-      fp4: fp[3] || 0,
-      fp5: fp[4] || 0,
-      fp6: fp[5] || 0,
+    // Build the request object with dynamic fp fields
+    const request: FwdRequest = {
       lck,
       lckf: 0, // Not exposed in FwdPort
       imr: 0, // Not exposed (mirror source?)
@@ -191,5 +191,13 @@ export class FwdPage {
       fvid: 0, // Not exposed
       vlnh: new Array(this.numPorts).fill(0), // Not exposed (vlan header)
     }
+
+    // Add dynamic fp fields
+    for (let i = 0; i < fp.length; i++) {
+      const fpKey = `fp${i + 1}` as `fp${number}`
+      request[fpKey] = fp[i] || 0
+    }
+
+    return request
   }
 }

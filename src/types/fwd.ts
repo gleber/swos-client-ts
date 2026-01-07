@@ -19,23 +19,20 @@ export interface Fwd {
 
 export interface RawFwdStatus {
   ir: string[]
-  or: string[]
-  fp1: string
-  fp2: string
-  fp3: string
-  fp4: string
-  fp5: string
-  fp6: string
+  or?: string[]
   lck: string
   lckf: string
   imr: string
   omr: string
   mrto: string
   vlan: string[]
-  vlnh: string[]
+  vlnh?: string[]
   vlni: string[]
   fvid: string
   dvid: string[]
   srt: string[]
   suni: string
+  fmc: string
+  // Dynamic fp fields: fp1, fp2, fp3, ..., fpN
+  [key: `fp${number}`]: string
 }

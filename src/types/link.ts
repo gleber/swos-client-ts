@@ -12,6 +12,13 @@ export enum PoeStatus {
   Active = 'active',
 }
 
+export enum LinkSpeed {
+  Speed10M = '10M',
+  Speed100M = '100M',
+  Speed1G = '1G',
+  Unavailable = 'unavailable',
+}
+
 export interface Link {
   name: string
   enabled: boolean
@@ -23,6 +30,7 @@ export interface Link {
   poeMode: PoeMode
   poePrio: number
   poeStatus: PoeStatus
+  speed: LinkSpeed
   speedControl: number
   power: number
   current: number

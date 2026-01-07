@@ -197,8 +197,34 @@ export function toMikrotik(obj: unknown): string {
 
 // ===== Enum Converters =====
 
-import { PoeMode, PoeStatus } from '../types/link.js'
+import { LinkSpeed, PoeMode, PoeStatus } from '../types/link.js'
 import { VlanPortMode } from '../types/vlan.js'
+
+/**
+ * Converts SwOS numeric link speed value to string enum.
+ */
+export function toLinkSpeed(value: number): LinkSpeed {
+  const map: Record<number, LinkSpeed> = {
+    0: LinkSpeed.Speed10M,
+    1: LinkSpeed.Speed100M,
+    2: LinkSpeed.Speed1G,
+    7: LinkSpeed.Unavailable,
+  }
+  return map[value] ?? LinkSpeed.Unavailable
+}
+
+/**
+ * Converts link speed string enum to SwOS numeric value.
+ */
+export function fromLinkSpeed(speed: LinkSpeed): number {
+  const map: Record<LinkSpeed, number> = {
+    [LinkSpeed.Speed10M]: 0x00,
+    [LinkSpeed.Speed100M]: 0x01,
+    [LinkSpeed.Speed1G]: 0x02,
+    [LinkSpeed.Unavailable]: 0x07,
+  }
+  return map[speed]
+}
 
 /**
  * Converts SwOS numeric PoE mode value to string enum.

@@ -38,12 +38,6 @@ export interface RstpRequest {
 }
 
 export interface FwdRequest {
-  fp1: number
-  fp2: number
-  fp3: number
-  fp4: number
-  fp5: number
-  fp6: number
   lck: number
   lckf: number
   imr: number
@@ -55,4 +49,6 @@ export interface FwdRequest {
   dvid: number[]
   fvid: number
   vlnh: number[]
+  // Dynamic fp fields: fp1, fp2, fp3, ..., fpN
+  [key: `fp${number}`]: number | number[]
 }

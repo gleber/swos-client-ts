@@ -1,7 +1,7 @@
 import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SwOSClient } from '../core/swos-client.js'
-import { PoeMode, PoeStatus } from '../types/link.js'
+import { LinkSpeed, PoeMode, PoeStatus } from '../types/link.js'
 import { http, HttpResponse, server } from './setup.js'
 
 describe('LinkPage', () => {
@@ -36,6 +36,7 @@ describe('LinkPage', () => {
       poeMode: PoeMode.Off,
       poePrio: 0,
       poeStatus: PoeStatus.Unavailable,
+      speed: LinkSpeed.Speed10M,
       speedControl: 0,
       power: 0,
       current: 0,
@@ -138,6 +139,8 @@ describe('LinkPage', () => {
     // Check missing fields are defaulted
     expect(links[0].poeMode).toBe(PoeMode.Off)
     expect(links[0].power).toBe(0)
+    // Check speed field is parsed from spd array
+    expect(links[0].speed).toBe(LinkSpeed.Speed1G) // First port speed from spd:[0x02,...]
   })
 
   it('should load data using async wrapper method', async () => {
