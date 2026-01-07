@@ -1,38 +1,41 @@
 import type { IpAddress, MacAddress } from './branded.js'
 
+import type { AddressAcquisition, PoEOutMode } from './mikrotik-fields.js'
+
 export interface SysPort {
   mikrotikDiscoveryProtocol: boolean
   allowFrom: boolean
   igmpFastLeave: boolean
+  trusted: boolean // dtrp
 }
 
 export interface Sys {
-  mac: MacAddress
-  serialNumber: string
-  identity: string
-  version: string
-  boardName: string
-  rootBridgeMac: MacAddress
-  uptime: number
-  ip: IpAddress
-  build: number
-  dsc: number
-  wdt: number
-  independentVlanLookup: boolean
-  allowFrom: IpAddress
-  allm: number
-  allowFromVlan: number
-  igmpSnooping: boolean
-  igmpQuerier: boolean
-  longPoeCable: boolean
-  igmpVersion: number
-  voltage: number
-  temperature: number
-  bridgePriority: number
-  portCostMode: number
-  forwardReservedMulticast: boolean
-  addressAcquisition: number
-  staticIpAddress: IpAddress
+  identity: string // id
+  macAddress: MacAddress // mac
+  serialNumber: string // ser / sid
+  version: string // ver
+  boardName: string // brd
+  uptime: number // upt
+
+  addressAcquisition: AddressAcquisition // iptp
+  staticIpAddress: IpAddress // ip / sip?
+
+  watchdog: boolean // wdt
+  mikrotikDiscoveryProtocol: boolean // dsc
+  independentVlanLookup: boolean // ivl
+  igmpSnooping: boolean // igmp
+  addInformationOption: boolean // ainf
+
+  allowFromIp: IpAddress // alla
+  allowFromIpMask: number // allm
+  allowFromVlan: number // avln
+
+  // Optional / Device Specific
+  poeOutMode?: PoEOutMode // poe
+  temperature?: number // temp
+  cpuTemperature?: number
+  voltage?: number // volt
+
   ports: SysPort[]
 }
 
@@ -66,6 +69,10 @@ export interface RawSysStatus {
   igfl: string
   // Optional fields
   pdsc?: string
+  dtrp?: string // Trusted Ports
+  ainf?: string // Add Information Option
+  poe?: string // PoE Out Mode
+  poes?: string // PoE Out Status
   igmq?: string
   igve?: string
   frmc?: string

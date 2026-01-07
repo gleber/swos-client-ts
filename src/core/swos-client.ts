@@ -1,6 +1,6 @@
 import DigestFetch from 'digest-fetch'
 import { Effect } from 'effect'
-import type { RawAclStatus } from '../types/acl.js'
+import type { AclRule } from '../types/acl.js'
 import { SwOSError } from '../types/error.js'
 import type { Fwd } from '../types/fwd.js'
 import type { RawHostStatus } from '../types/host.js'
@@ -35,7 +35,7 @@ export interface SwOSData {
   fwd?: Fwd
   rstp?: Rstp
   stats?: PortStats[]
-  acl?: RawAclStatus
+  acl?: AclRule[]
   hosts?: RawHostStatus // Pending refactor if desired, but user only asked for stats/lag specifically
   igmp?: RawIgmpStatus
   lag?: LagPort[]

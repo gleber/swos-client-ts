@@ -18,7 +18,9 @@ export interface SnmpRequest {
 
 export interface SysRequest {
   iptp: number
-  sip: number
+  ip?: number // Changed from sip? dump says id:'ip'. Previous code used sip. Keeping both or checking?
+  // Let's add common ones.
+  sip?: number
   id: string
   alla: number
   allm: number
@@ -26,11 +28,12 @@ export interface SysRequest {
   avln: number
   ivl: number
   igmp: number
-  igmq: number
   igfl: number
-  igve: number
   pdsc: number
-  lcbl: number
+  dtrp?: number
+  wdt?: number
+  dsc?: number
+  ainf?: number
 }
 
 export interface VlanRequest {

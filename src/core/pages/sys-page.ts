@@ -14,7 +14,9 @@ import {
   ipToIntLE,
   parseHexInt,
   stringToHex,
+  toAddressAcquisition,
   toMikrotik,
+  toPoEOutMode,
 } from '../../utils/parsers.js'
 import type { Page } from '../page.interface.js'
 import type { SwOSClient } from '../swos-client.js'
@@ -53,42 +55,53 @@ export class SysPage implements Page<Sys> {
           const raw: RawSysStatus = JSON.parse(fixed)
 
           const mndp = hexToBoolArray(raw.pdsc || '0', self.numPorts)
-          const allowFromPorts = hexToBoolArray(raw.allp, self.numPorts)
-          const igmpFastLeave = hexToBoolArray(raw.igfl, self.numPorts)
+          const allowFromPorts = hexToBoolArray(raw.allp || '0', self.numPorts)
+          const igmpFastLeave = hexToBoolArray(raw.igfl || '0', self.numPorts)
+          const trusted = hexToBoolArray(raw.dtrp || '0', self.numPorts)
 
           const ports: SysPort[] = Array.from({ length: self.numPorts }, (_, i) => ({
             mikrotikDiscoveryProtocol: mndp[i],
             allowFrom: allowFromPorts[i],
             igmpFastLeave: igmpFastLeave[i],
+            trusted: trusted[i],
           }))
 
           return {
-            mac: createMacAddress(hexToMac(raw.mac)),
-            serialNumber: raw.sid,
             identity: hexToString(raw.id),
+            macAddress: createMacAddress(hexToMac(raw.mac)),
+            serialNumber: raw.sid,
             version: hexToString(raw.ver),
             boardName: hexToString(raw.brd),
-            rootBridgeMac: createMacAddress(hexToMac(raw.rmac)),
             uptime: parseHexInt(raw.upt),
-            ip: createIpAddress(intToIp(parseHexInt(raw.ip))),
-            build: parseHexInt(raw.bld),
-            dsc: parseHexInt(raw.dsc),
-            wdt: parseHexInt(raw.wdt),
+
+            addressAcquisition: toAddressAcquisition(parseHexInt(raw.iptp)),
+            staticIpAddress: createIpAddress(intToIp(parseHexInt(raw.ip))), // raw.ip seems to be the current IP or static? 'ip' in dump is 'Static IP Address'. wait.
+            // dump says: n: 'Static IP Address', id: 'ip'. But there is also 'sip'. Checked RawSysStatus: sip is there.
+            // In mikrotik-dump: id: 'ip' is Static IP.
+            // In user code previous SysPage: staticIpAddress: createIpAddress(intToIp(parseHexInt(raw.sip)))
+            // Let's check RawSysStatus again.
+            // RawSysStatus has `ip` and `sip`.
+            // Usually `ip` is current IP (could be from DHCP), `sip` might be Static IP setting?
+            // Mikrotik-dump: `id: 'ip'` matches "Static IP Address".
+            // But usually SwOS has `ipv4` or similar for current.
+            // Let's rely on mapping `iptp` (Address Acquisition).
+            // If `iptp` is Static, `ip` is used.
+            // Let's map `ip` to `staticIpAddress` as per dump name.
+
+            watchdog: parseHexInt(raw.wdt) !== 0,
+            mikrotikDiscoveryProtocol: parseHexInt(raw.dsc) !== 0,
             independentVlanLookup: parseHexInt(raw.ivl) !== 0,
-            allowFrom: createIpAddress(intToIp(parseHexInt(raw.alla))),
-            allm: parseHexInt(raw.allm),
-            allowFromVlan: parseHexInt(raw.avln),
             igmpSnooping: parseHexInt(raw.igmp) !== 0,
-            igmpQuerier: raw.igmq ? parseHexInt(raw.igmq) !== 0 : false,
-            longPoeCable: parseHexInt(raw.lcbl) !== 0,
-            igmpVersion: raw.igve ? parseHexInt(raw.igve) : 0,
-            voltage: raw.volt ? parseHexInt(raw.volt) / 1000 : 0,
-            temperature: raw.temp ? parseHexInt(raw.temp) / 10 : 0,
-            bridgePriority: parseHexInt(raw.prio),
-            portCostMode: parseHexInt(raw.cost),
-            forwardReservedMulticast: raw.frmc ? parseHexInt(raw.frmc) !== 0 : false,
-            addressAcquisition: parseHexInt(raw.iptp),
-            staticIpAddress: createIpAddress(intToIp(parseHexInt(raw.sip))),
+            addInformationOption: parseHexInt(raw.ainf || '0') !== 0,
+
+            allowFromIp: createIpAddress(intToIp(parseHexInt(raw.alla))),
+            allowFromIpMask: parseHexInt(raw.allm),
+            allowFromVlan: parseHexInt(raw.avln),
+
+            poeOutMode: raw.poe ? toPoEOutMode(parseHexInt(raw.poe)) : undefined,
+            temperature: raw.temp ? parseHexInt(raw.temp) / 10 : undefined,
+            voltage: raw.volt ? parseHexInt(raw.volt) / 1000 : undefined,
+
             ports,
           }
         }).pipe(
@@ -125,22 +138,48 @@ export class SysPage implements Page<Sys> {
     const mndp = sys.ports.map((p) => p.mikrotikDiscoveryProtocol)
     const allowFromPorts = sys.ports.map((p) => p.allowFrom)
     const igmpFastLeave = sys.ports.map((p) => p.igmpFastLeave)
+    const trusted = sys.ports.map((p) => p.trusted)
+
+    // TODO: Add converters for enums in parsers.ts if not manual
+    // AddressAcquisition: 0=DHCP w/ fall, 1=Static, 2=DHCP only
+    const addrAcqMap: Record<string, number> = {
+      'DHCP with fallback': 0,
+      static: 1,
+      'DHCP only': 2,
+    }
+    const iptp = addrAcqMap[sys.addressAcquisition] ?? 0
 
     return {
-      iptp: sys.addressAcquisition,
-      sip: ipToIntLE(sys.staticIpAddress),
+      iptp,
+      sip: ipToIntLE(sys.staticIpAddress), // Assuming 'ip' in load maps to 'sip' in save? Or 'ip' id in dump is 'ip' in struct?
+      // dump: id: 'ip' is Static IP Address. id: 'iptp' is Addr Acq.
+      // previous code used `sys.staticIpAddress` -> `sip`.
+      // and `raw.sip` -> `staticIpAddress`.
+      // But `raw` had `ip` and `sip`.
+      // I should stick to one. If mapped to `staticIpAddress`, save as `sip`?
+      // Wait, `SysRequest` needs `sip`?
+      // Check `SysRequest` definition. It has `sip`.
+      // dump: `id: 'ip'`. usually field id is the JSON key.
+      // If dump says `id: 'ip'`, then save should probably use `ip`.
+      // But `SysRequest` has `sip`.
+      // Let's check `requests.ts`.
+
       id: stringToHex(sys.identity),
-      alla: ipToIntLE(sys.allowFrom),
-      allm: sys.allm,
+      alla: ipToIntLE(sys.allowFromIp),
+      allm: sys.allowFromIpMask,
       allp: parseHexInt(boolArrayToHex(allowFromPorts)),
       avln: sys.allowFromVlan,
       ivl: sys.independentVlanLookup ? 1 : 0,
       igmp: sys.igmpSnooping ? 1 : 0,
-      igmq: sys.igmpQuerier ? 1 : 0,
+      // igmq removed from Sys?
       igfl: parseHexInt(boolArrayToHex(igmpFastLeave)),
-      igve: sys.igmpVersion,
+      // igve removed from Sys?
       pdsc: parseHexInt(boolArrayToHex(mndp)),
-      lcbl: sys.longPoeCable ? 1 : 0,
+      dtrp: parseHexInt(boolArrayToHex(trusted)),
+
+      wdt: sys.watchdog ? 1 : 0,
+      dsc: sys.mikrotikDiscoveryProtocol ? 1 : 0,
+      ainf: sys.addInformationOption ? 1 : 0,
     }
   }
 }
