@@ -1,6 +1,7 @@
 import { Effect } from 'effect'
 import { SwOSError } from '../../types/error.js'
 import type { Link, RawLinkStatus } from '../../types/link.js'
+import { FlowControl, LinkStatus } from '../../types/mikrotik-fields.js'
 import type { LinkRequest } from '../../types/requests.js'
 import {
   boolArrayToHex,
@@ -57,10 +58,10 @@ export class LinkPage implements Page<Link[]> {
           return Array.from({ length: numPorts }, (_, i) => ({
             name: hexToString(raw.nm[i]),
             enabled: en[i],
-            linkUp: lnk[i],
-            duplex: dpx[i],
+            linkStatus: lnk[i] ? LinkStatus.LinkOn : LinkStatus.NoLink,
+            duplex: dpx[i] ? 1 : 0, // DuplexMode.Full : DuplexMode.Half (1 vs 0)
             duplexControl: dpxc[i],
-            flowControl: fct[i],
+            flowControl: fct[i] ? FlowControl.On : FlowControl.Off,
             autoNegotiation: an[i],
             poeMode: raw.poe ? toPoeMode(parseHexInt(raw.poe[i])) : toPoeMode(0),
             poePrio: raw.prio ? parseHexInt(raw.prio[i]) : 0,
@@ -115,7 +116,7 @@ export class LinkPage implements Page<Link[]> {
       an: parseHexInt(boolArrayToHex(an)),
       spdc,
       dpxc: parseHexInt(boolArrayToHex(dpxc)),
-      fct: parseHexInt(boolArrayToHex(fct)),
+      fct: parseHexInt(boolArrayToHex(links.map((l) => l.flowControl !== FlowControl.Off))),
       poe,
       prio,
     }

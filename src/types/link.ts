@@ -1,3 +1,5 @@
+import type { DuplexMode, FlowControl, LinkStatus as LinkStatusEnum } from './mikrotik-fields.js'
+
 export enum PoeMode {
   Off = 'off',
   Auto = 'auto',
@@ -22,10 +24,10 @@ export enum LinkSpeed {
 export interface Link {
   name: string
   enabled: boolean
-  linkUp: boolean
-  duplex: boolean
+  linkStatus: LinkStatusEnum
+  duplex: DuplexMode
   duplexControl: boolean
-  flowControl: boolean
+  flowControl: FlowControl
   autoNegotiation: boolean
   poeMode: PoeMode
   poePrio: number
@@ -55,6 +57,18 @@ export interface RawLinkStatus {
   poes: string[]
   curr: string[]
   pwr: string[]
+  // New fields from mikrotik-dump.js
+  blkp?: string // Block On No Power
+  cm?: string // Combo Mode
+  qtyp?: string // QSFP Type
+  tfct?: string // Flow Control (Total?)
+  fctc?: string // Flow Control Tx?
+  fctr?: string // Flow Control Rx?
+  hop?: string[] // Hops
+  hops?: string[] // Last Hop
+  len?: string[] // Length
+  flt?: string[] // Fault At
+  pair?: string[] // Cable Pairs
 }
 
 export interface LinkConfig {

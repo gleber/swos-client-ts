@@ -1,17 +1,29 @@
 import DigestFetch from 'digest-fetch'
 import { Effect } from 'effect'
+import type { RawAclStatus } from '../types/acl.js'
 import { SwOSError } from '../types/error.js'
 import type { Fwd } from '../types/fwd.js'
+import type { RawHostStatus } from '../types/host.js'
+import type { RawIgmpStatus } from '../types/igmp.js'
+import type { LagPort } from '../types/lag.js'
 import type { Link } from '../types/link.js'
 import type { Rstp } from '../types/rstp.js'
 import type { SfpStatus } from '../types/sfp.js'
+import type { RawSnmpStatus, Snmp } from '../types/snmp.js'
+import type { PortStats } from '../types/stat.js'
 import type { Sys } from '../types/sys.js'
 import type { Vlan } from '../types/vlan.js'
 import type { Page } from './page.interface.js'
+import { AclPage } from './pages/acl-page.js'
 import { FwdPage } from './pages/fwd-page.js'
+import { HostPage } from './pages/host-page.js'
+import { IgmpPage } from './pages/igmp-page.js'
+import { LagPage } from './pages/lag-page.js'
 import { LinkPage } from './pages/link-page.js'
 import { RstpPage } from './pages/rstp-page.js'
 import { SfpPage } from './pages/sfp-page.js'
+import { SnmpPage } from './pages/snmp-page.js'
+import { StatsPage } from './pages/stats-page.js'
 import { SysPage } from './pages/sys-page.js'
 import { VlanPage } from './pages/vlan-page.js'
 
@@ -22,6 +34,12 @@ export interface SwOSData {
   vlan?: Vlan[]
   fwd?: Fwd
   rstp?: Rstp
+  stats?: PortStats[]
+  acl?: RawAclStatus
+  hosts?: RawHostStatus // Pending refactor if desired, but user only asked for stats/lag specifically
+  igmp?: RawIgmpStatus
+  lag?: LagPort[]
+  snmp?: Snmp
 }
 
 /**
@@ -38,6 +56,12 @@ export class SwOSClient {
   public vlan: VlanPage
   public fwd: FwdPage
   public rstp: RstpPage
+  public stats: StatsPage
+  public acl: AclPage
+  public hosts: HostPage
+  public igmp: IgmpPage
+  public lag: LagPage
+  public snmp: SnmpPage
 
   constructor(host: string, username: string, password: string) {
     this.baseUrl = `http://${host}`
@@ -48,6 +72,12 @@ export class SwOSClient {
     this.vlan = new VlanPage(this)
     this.fwd = new FwdPage(this)
     this.rstp = new RstpPage(this)
+    this.stats = new StatsPage(this)
+    this.acl = new AclPage(this)
+    this.hosts = new HostPage(this)
+    this.igmp = new IgmpPage(this)
+    this.lag = new LagPage(this)
+    this.snmp = new SnmpPage(this)
   }
 
   fetch(endpoint: string): Effect.Effect<string, SwOSError> {
@@ -112,12 +142,18 @@ export class SwOSClient {
       const sys = yield* _(self.sys.load())
 
       // Load optional pages concurrently
-      const [sfp, vlan, fwd, rstp] = yield* _(
+      const [sfp, vlan, fwd, rstp, stats, acl, hosts, igmp, lag, snmp] = yield* _(
         Effect.all([
           loadOptional(self.sfp),
           loadOptional(self.vlan),
           loadOptional(self.fwd),
           loadOptional(self.rstp),
+          loadOptional(self.stats),
+          loadOptional(self.acl),
+          loadOptional(self.hosts),
+          loadOptional(self.igmp),
+          loadOptional(self.lag),
+          loadOptional(self.snmp),
         ])
       )
 
@@ -128,6 +164,12 @@ export class SwOSClient {
         vlan,
         fwd,
         rstp,
+        stats,
+        acl,
+        hosts,
+        igmp,
+        lag,
+        snmp,
       }
     })
   }

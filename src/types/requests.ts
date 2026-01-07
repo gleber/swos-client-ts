@@ -9,6 +9,13 @@ export interface LinkRequest {
   poe: number[]
 }
 
+export interface SnmpRequest {
+  en?: number
+  com?: string
+  ci?: string
+  loc?: string
+}
+
 export interface SysRequest {
   iptp: number
   sip: number

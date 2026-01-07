@@ -1,6 +1,8 @@
+import type { RstpRole, RstpState } from './mikrotik-fields.js'
+
 export interface RstpPort {
-  role: number
-  status: number
+  role: RstpRole
+  status: RstpState
   priority: number
   cost: number
   portId: number

@@ -24,6 +24,28 @@ export function fixJson(input: string): string {
 }
 
 /**
+ * Converts a hex string to an ASCII string.
+ */
+export function hexToString(hex: string): string {
+  let str = ''
+  for (let i = 0; i < hex.length; i += 2) {
+    str += String.fromCharCode(Number.parseInt(hex.substr(i, 2), 16))
+  }
+  return str
+}
+
+/**
+ * Converts an ASCII string to a hex string.
+ */
+export function stringToHex(str: string): string {
+  let hex = ''
+  for (let i = 0; i < str.length; i++) {
+    hex += str.charCodeAt(i).toString(16).padStart(2, '0')
+  }
+  return hex
+}
+
+/**
  * Converts a hex string bitmask to a boolean array.
  * Used for port flags where each bit represents a port.
  *
@@ -55,32 +77,6 @@ export function boolArrayToHex(arr: boolean[]): string {
     }
   }
   return `0x${num.toString(16).toUpperCase()}`
-}
-
-/**
- * Converts a hex string to a UTF-8 string.
- * SwOS returns strings (likely identities, names) as hex.
- *
- * @param hex - Hex string
- * @returns Decoded string
- */
-export function hexToString(hex: string): string {
-  if (!hex || hex === '') return ''
-  const bytes = hex.match(/.{1,2}/g)?.map((b) => Number.parseInt(b, 16)) || []
-  return Buffer.from(bytes).toString('utf8')
-}
-
-/**
- * Converts a string to a hex string.
- * Used for sending string values (identities, names) to SwOS.
- *
- * @param str - Input string
- * @returns Hex string
- */
-export function stringToHex(str: string): string {
-  return Array.from(str)
-    .map((c) => c.charCodeAt(0).toString(16).padStart(2, '0'))
-    .join('')
 }
 
 /**
@@ -302,6 +298,290 @@ export function fromVlanPortMode(mode: VlanPortMode): number {
     [VlanPortMode.NotAMember]: 3,
   }
   return map[mode]
+}
+
+// ===== New Enum Converters (from mikrotik-fields.ts) =====
+
+import {
+  type AddressAcquisition,
+  CablePairStatus,
+  type ComboMode,
+  DuplexMode,
+  FlowControl,
+  type LACPMode,
+  LastHopStatus,
+  LinkStatus,
+  PSUStatus,
+  type PoEOutMode,
+  PoEOutStatus,
+  type PortCostMode,
+  type QSFPType,
+  RstpMode,
+  RstpPortType,
+  type RstpRole,
+  type RstpState,
+  type SpeedControl,
+  type VLANMode,
+  type VLANReceive,
+  type VLANTagMatch,
+} from '../types/mikrotik-fields.js'
+
+/**
+ * Converts SwOS numeric link status value to enum.
+ */
+export function toLinkStatus(value: number): LinkStatus {
+  const map: Record<number, LinkStatus> = {
+    0: LinkStatus.NoLink,
+    1: LinkStatus.LinkOn,
+    2: LinkStatus.NoLinkAlt,
+    3: LinkStatus.LinkPaused,
+  }
+  return map[value] ?? LinkStatus.NoLink
+}
+
+export function fromLinkStatus(status: LinkStatus): number {
+  return status
+}
+
+/**
+ * Converts SwOS numeric duplex value to enum.
+ */
+export function toDuplexMode(value: number): DuplexMode {
+  return value === 0 ? DuplexMode.Half : DuplexMode.Full
+}
+
+export function fromDuplexMode(mode: DuplexMode): number {
+  return mode
+}
+
+/**
+ * Converts SwOS numeric flow control value to enum.
+ */
+export function toFlowControl(value: number): FlowControl {
+  const map: Record<number, FlowControl> = {
+    0: FlowControl.Off,
+    1: FlowControl.TxOnly,
+    2: FlowControl.RxOnly,
+    3: FlowControl.On,
+  }
+  return map[value] ?? FlowControl.Off
+}
+
+export function fromFlowControl(fc: FlowControl): number {
+  return fc
+}
+
+/**
+ * Converts SwOS numeric RSTP mode value to enum.
+ */
+export function toRstpMode(value: number): RstpMode {
+  return value === 0 ? RstpMode.STP : RstpMode.RSTP
+}
+
+export function fromRstpMode(mode: RstpMode): number {
+  return mode
+}
+
+/**
+ * Converts SwOS numeric RSTP role value to enum.
+ */
+export function toRstpRole(value: number): RstpRole {
+  const map: Record<number, RstpRole> = {
+    0: 'disabled',
+    1: 'alternate',
+    2: 'root',
+    3: 'designated',
+    4: 'backup',
+  }
+  return map[value] ?? 'disabled'
+}
+
+export function fromRstpRole(role: RstpRole): number {
+  const map: Record<RstpRole, number> = {
+    disabled: 0,
+    alternate: 1,
+    root: 2,
+    designated: 3,
+    backup: 4,
+  }
+  return map[role]
+}
+
+/**
+ * Converts SwOS numeric RSTP port type value to enum.
+ */
+export function toRstpPortType(value: number): RstpPortType {
+  const map: Record<number, RstpPortType> = {
+    0: RstpPortType.Shared,
+    1: RstpPortType.PointToPoint,
+    2: RstpPortType.Edge,
+    3: RstpPortType.EdgeAlt,
+  }
+  return map[value] ?? RstpPortType.Shared
+}
+
+export function fromRstpPortType(portType: RstpPortType): number {
+  return portType
+}
+
+/**
+ * Converts SwOS numeric RSTP state value to enum.
+ */
+export function toRstpState(value: number): RstpState {
+  const map: Record<number, RstpState> = {
+    0: 'discarding',
+    1: 'learning',
+    2: 'forwarding',
+    3: 'forwarding',
+  }
+  return map[value] ?? 'discarding'
+}
+
+export function fromRstpState(state: RstpState): number {
+  const map: Record<RstpState, number> = {
+    discarding: 0,
+    learning: 1,
+    forwarding: 2, // Defaulting to 2 for forwarding
+  }
+  return map[state]
+}
+
+/**
+ * Converts SwOS numeric PoE output status value to enum.
+ */
+export function toPoEOutStatus(value: number): PoEOutStatus {
+  const map: Record<number, PoEOutStatus> = {
+    0: PoEOutStatus.WaitingForLoad,
+    1: PoEOutStatus.PoweredOn,
+    2: PoEOutStatus.Overload,
+    3: PoEOutStatus.NoLoad,
+    4: PoEOutStatus.PoweredOnAlt,
+    5: PoEOutStatus.OverloadAlt,
+    6: PoEOutStatus.NoLoadAlt,
+    7: PoEOutStatus.HasLoad,
+    8: PoEOutStatus.InvalidLoad,
+  }
+  return map[value] ?? PoEOutStatus.WaitingForLoad
+}
+
+export function fromPoEOutStatus(status: PoEOutStatus): number {
+  return status
+}
+
+/**
+ * Converts SwOS numeric PSU status value to enum.
+ */
+export function toPSUStatus(value: number): PSUStatus {
+  return value === 0 ? PSUStatus.Failed : PSUStatus.Ok
+}
+
+export function fromPSUStatus(status: PSUStatus): number {
+  return status
+}
+
+/**
+ * Converts SwOS numeric combo mode value to string type.
+ */
+export function toComboMode(value: number): ComboMode {
+  const modes: ComboMode[] = ['auto', 'copper', 'sfp']
+  return modes[value] ?? 'auto'
+}
+
+/**
+ * Converts SwOS numeric QSFP type value to string type.
+ */
+export function toQSFPType(value: number): QSFPType {
+  const types: QSFPType[] = ['auto', '40G', '4x10G']
+  return types[value] ?? 'auto'
+}
+
+/**
+ * Converts SwOS numeric LACP mode value to string type.
+ */
+export function toLACPMode(value: number): LACPMode {
+  const modes: LACPMode[] = ['passive', 'active', 'static']
+  return modes[value] ?? 'passive'
+}
+
+/**
+ * Converts SwOS numeric address acquisition value to string type.
+ */
+export function toAddressAcquisition(value: number): AddressAcquisition {
+  const modes: AddressAcquisition[] = ['DHCP with fallback', 'static', 'DHCP only']
+  return modes[value] ?? 'DHCP with fallback'
+}
+
+/**
+ * Converts SwOS numeric PoE out mode value to string type.
+ */
+export function toPoEOutMode(value: number): PoEOutMode {
+  const modes: PoEOutMode[] = ['auto on', 'force on', 'off']
+  return modes[value] ?? 'auto on'
+}
+
+/**
+ * Converts SwOS numeric VLAN mode value to string type.
+ */
+export function toVLANMode(value: number): VLANMode {
+  const modes: VLANMode[] = ['disabled', 'optional', 'enabled', 'strict']
+  return modes[value] ?? 'disabled'
+}
+
+/**
+ * Converts SwOS numeric VLAN receive value to string type.
+ */
+export function toVLANReceive(value: number): VLANReceive {
+  const modes: VLANReceive[] = ['any', 'only tagged', 'only untagged']
+  return modes[value] ?? 'any'
+}
+
+/**
+ * Converts SwOS numeric VLAN tag match value to string type.
+ */
+export function toVLANTagMatch(value: number): VLANTagMatch {
+  const modes: VLANTagMatch[] = ['any', 'present', 'not present']
+  return modes[value] ?? 'any'
+}
+
+/**
+ * Converts SwOS numeric last hop status value to string type.
+ */
+export function toLastHopStatus(value: number): LastHopStatus {
+  const map: Record<number, LastHopStatus> = {
+    0: LastHopStatus.Unknown,
+    1: LastHopStatus.LinkOk,
+    2: LastHopStatus.NoLink,
+  }
+  return map[value] ?? LastHopStatus.Unknown
+}
+
+/**
+ * Converts SwOS numeric cable pair status value to string type.
+ */
+export function toCablePairStatus(value: number): CablePairStatus {
+  const map: Record<number, CablePairStatus> = {
+    0: CablePairStatus.Normal,
+    1: CablePairStatus.Short,
+    2: CablePairStatus.Open,
+    3: CablePairStatus.ReversedPolarity,
+  }
+  return map[value] ?? CablePairStatus.Normal
+}
+
+/**
+ * Converts SwOS numeric speed control value to string type.
+ */
+export function toSpeedControl(value: number): SpeedControl {
+  const modes: SpeedControl[] = ['10M', '100M', '1G']
+  return modes[value] ?? '1G'
+}
+
+/**
+ * Converts SwOS numeric port cost mode value to string type.
+ */
+export function toPortCostMode(value: number): PortCostMode {
+  const modes: PortCostMode[] = ['short', 'long']
+  return modes[value] ?? 'short'
 }
 
 // ===== Branded Type Constructors =====
