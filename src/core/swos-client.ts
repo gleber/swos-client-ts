@@ -5,6 +5,7 @@ import type { SwOSAggregatedState } from '../types/aggregated.js'
 import { SwOSError } from '../types/error.js'
 import type { Fwd } from '../types/fwd.js'
 import type { RawHostStatus } from '../types/host.js'
+import type { DHostEntry, RawDHostEntry } from '../types/dhost.js'
 import type { RawIgmpStatus } from '../types/igmp.js'
 import type { LagPort } from '../types/lag.js'
 import type { Link } from '../types/link.js'
@@ -28,6 +29,7 @@ import { StatsPage } from './pages/stats-page.js'
 import { SysPage } from './pages/sys-page.js'
 import { VlanPage } from './pages/vlan-page.js'
 import { aggregateSwOSData } from './swos-aggregator.js'
+import { fixJson, parseDHost } from '../utils/parsers.js'
 
 export interface SwOSData {
   links: Link[]
@@ -42,6 +44,7 @@ export interface SwOSData {
   igmp?: RawIgmpStatus
   lag?: LagPort[]
   snmp?: Snmp
+  dhosts?: DHostEntry[]
 }
 
 /**
@@ -115,6 +118,20 @@ export class SwOSClient {
     })
   }
 
+  getDHosts(): Effect.Effect<DHostEntry[], SwOSError> {
+    const self = this
+    return Effect.gen(function* (_) {
+      const response = yield* _(self.fetch('/!dhost.b'))
+      try {
+        const fixed = fixJson(response)
+        const raw = JSON.parse(fixed) as RawDHostEntry[]
+        return parseDHost(raw)
+      } catch (e) {
+        return yield* _(Effect.fail(new SwOSError(`Failed to parse dhosts: ${(e as Error).message}`)))
+      }
+    })
+  }
+
   /**
    * Aggregates data from all supported pages into a single state object.
    * - Loads 'System' and 'Links' first to determine port count.
@@ -144,7 +161,7 @@ export class SwOSClient {
       const sys = yield* _(self.sys.load())
 
       // Load optional pages concurrently
-      const [sfp, vlan, fwd, rstp, stats, acl, hosts, igmp, lag, snmp] = yield* _(
+      const [sfp, vlan, fwd, rstp, stats, acl, hosts, igmp, lag, snmp, dhosts] = yield* _(
         Effect.all([
           loadOptional(self.sfp),
           loadOptional(self.vlan),
@@ -156,6 +173,10 @@ export class SwOSClient {
           loadOptional(self.igmp),
           loadOptional(self.lag),
           loadOptional(self.snmp),
+          Effect.match(self.getDHosts(), {
+            onFailure: () => undefined,
+            onSuccess: (data) => data,
+          }),
         ])
       )
 
@@ -172,6 +193,7 @@ export class SwOSClient {
         igmp,
         lag,
         snmp,
+        dhosts: dhosts as DHostEntry[] | undefined,
       }
     })
   }

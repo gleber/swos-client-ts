@@ -600,6 +600,7 @@ export function toPortCostMode(value: number): PortCostMode {
 // ===== Branded Type Constructors =====
 
 import { Schema } from 'effect'
+import { DHostEntry, RawDHostEntry } from '../types/dhost.js'
 import { IpAddress, MacAddress } from '../types/branded.js'
 
 /**
@@ -610,6 +611,7 @@ export function createIpAddress(value: string): IpAddress {
   return Schema.decodeUnknownSync(IpAddress)(value)
 }
 
+
 /**
  * Creates a branded MacAddress from a string.
  * Validates the format and throws if invalid.
@@ -617,3 +619,20 @@ export function createIpAddress(value: string): IpAddress {
 export function createMacAddress(value: string): MacAddress {
   return Schema.decodeUnknownSync(MacAddress)(value)
 }
+
+/**
+ * Parses RawDHostEntry[] to DHostEntry[].
+ */
+export function parseDHost(raw: RawDHostEntry[]): DHostEntry[] {
+  return raw.map((entry) => ({
+    port:
+      typeof entry.prt === 'number'
+        ? entry.prt
+        : entry.prt.startsWith('0x')
+          ? Number.parseInt(entry.prt, 16)
+          : Number.parseInt(entry.prt, 10),
+    mac: hexToMac(entry.adr),
+    vlanId: Number(entry.vid),
+  }))
+}
+
